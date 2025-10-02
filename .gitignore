@@ -1,6 +1,6 @@
 # Prerequisites
 *.d
-
+secrets.h
 # Compiled Object files
 *.slo
 *.lo
