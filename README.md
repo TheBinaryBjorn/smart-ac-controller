@@ -20,9 +20,16 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
   Alternatively you can use IRremote just translate captured IR codes to it's communication format.
 - Something I can't remember for SHT30, but I still haven't implemented it anyway so I'll update in the future.
 
+### What I did so far
+- Connected the breadboard prototype circuit.
+- Spent hours figuring out which side of the Transistor is C and which is E and why I even need it since I'm a software engineer and not an electrical engineer XD.
+- Captured my remote codes for on and off.
+- Made a basic loop for On and Off for testing.
+
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
 - IR not activating AC with captured code, Solution was to replace the original black IR LED I put in with a clear one,
   I figured this one out with a web cam test, looking at my old remote I saw a big purple flash when I used it and didn't when
   I used my prototype, changed to a clear IR LED and viola, it suddenly worked. Maybe the IR LED was just faulty but if it ain't broken
   I ain't trying to fix XD.
+  
