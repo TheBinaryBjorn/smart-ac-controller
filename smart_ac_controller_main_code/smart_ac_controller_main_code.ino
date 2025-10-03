@@ -112,6 +112,7 @@ void initWebServer() {
     // Serve static files
     server.serveStatic("/style.css", LittleFS, "/style.css");
     server.serveStatic("/script.js", LittleFS, "/script.js");
+    server.serveStatic("/background.png", LittleFS, "/background.png");
 
     // Root endpoint
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){

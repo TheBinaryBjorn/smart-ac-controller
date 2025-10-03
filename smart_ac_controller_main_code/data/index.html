@@ -6,13 +6,13 @@
     <title>Climate</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-img">
     <div class="container">
         <h1>Climate</h1>
         
         <div class="button-group">
-            <button class="btn-on" onclick="sendApiCall('/turn-on')">Power On</button>
-            <button class="btn-off" onclick="sendApiCall('/turn-off')">Power Off</button>
+            <button class="btn-on glass" onclick="sendApiCall('/turn-on')">Power On</button>
+            <button class="btn-off glass" onclick="sendApiCall('/turn-off')">Power Off</button>
         </div>
         
         <div class="temp-control">
@@ -26,7 +26,7 @@
                 <span>18°</span>
                 <span>30°</span>
             </div>
-            <button class="set-btn" onclick="setTemp(document.getElementById('temp').value)">Apply</button>
+            <button class="set-btn glass" onclick="setTemp(document.getElementById('temp').value)">Apply</button>
         </div>
         
         <div id="status" class="status">Ready</div>
