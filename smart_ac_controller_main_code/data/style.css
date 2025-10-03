@@ -51,10 +51,16 @@ h1 {
     letter-spacing: -0.5px;
 }
 
-.button-group {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 36px;
+.four-item-grid{
+	display: grid;
+    gap: 10px;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 1fr;
+}
+.two-item-grid{
+	display: grid;
+    gap: 10px;
+	grid-template-columns: 1fr 1fr;
 }
 
 button {

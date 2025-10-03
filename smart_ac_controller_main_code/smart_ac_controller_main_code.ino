@@ -213,9 +213,11 @@ void handleIRReceive() {
 void turnOnAC() {
     Serial.printf("Turning AC ON...\n");
     ac.on();
+
     ac.setTemp(currentTemp);
     ac.setMode(currentMode);
     ac.setFan(currentFan);
+    
     ac.send();
     Serial.println("AC ON command sent");
 }
