@@ -10,11 +10,25 @@
     <div class="container">
         <h1>Climate</h1>
         
-        <div class="button-group">
-            <button class="btn-on glass" onclick="sendApiCall('/turn-on')">Power On</button>
-            <button class="btn-off glass" onclick="sendApiCall('/turn-off')">Power Off</button>
-        </div>
-        
+		<div class="temp-control">
+			<div class="button-group">
+				<button class="btn-on glass" onclick="sendApiCall('/turn-on')">Power On</button>
+				<button class="btn-off glass" onclick="sendApiCall('/turn-off')">Power Off</button>
+			</div>
+		</div>
+        <!-- Fan Control -->
+		<div>
+			<div class="temp-control">
+				<div class="temp-label">Fan Speed</div>
+				<div class="button-group">
+					<button class="glass" onClick="setFan('auto')">Auto</button>
+					<button class="glass" onClick="setFan('low')">Low</button>
+					<button class="glass" onClick="setFan('med')">Med</button>
+					<button class="glass" onClick="setFan('high')">High</button>
+				</div>
+			</div>
+		</div>
+		<!-- Temp Control -->
         <div class="temp-control">
             <div class="temp-label">Temperature</div>
             <div class="temp-display">

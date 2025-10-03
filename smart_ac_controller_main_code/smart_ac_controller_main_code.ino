@@ -21,6 +21,14 @@
 #define MIN_TEMP 18
 #define MAX_TEMP 30
 #define SERVER_DOMAIN "smart-ac-controller"
+#define FAN_AUTO kLgAcFanAuto
+#define FAN_LOW kLgAcFanLow
+#define FAN_MED kLgAcFanMedium
+#define FAN_HIGH kLgAcFanHigh
+#define MODE_COOL kLgAcCool
+#define MODE_HEAT kLgAcHeat
+#define MODE_DRY kLgAcDry
+#define MODE_FAN kLgAcFan
 
 // ============================
 // Globals
@@ -29,6 +37,9 @@ IRLgAc ac(IR_LED_PIN);
 IRrecv irReceiver(IR_RECEIVE_PIN);
 decode_results irResults;
 uint8_t currentTemp = DEFAULT_TEMP;
+uint8_t currentFan = FAN_AUTO;
+uint8_t currentMode = MODE_COOL;
+
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -43,10 +54,11 @@ void initLittleFS();
 void initIR();
 void initWebServer();
 void handleIRReceive();
-void turnOnAC(uint8_t temp = DEFAULT_TEMP);
+void turnOnAC();
 void turnOffAC();
 void setACTemperature(uint8_t temp);
-void notifyTempChange();
+void sendStateToClients();
+void setACFan(uint8_t fanMode);
 
 // ============================
 // Setup
@@ -104,8 +116,13 @@ void initIR() {
     Serial.println("IR Sender and Receiver initialized");
 }
 
-void notifyTempChange() {
-    ws.textAll(String(currentTemp));
+void sendStateToClients() {
+    String state = "{";
+    state += "\"mode\":" + String(currentMode) + ",";
+    state += "\"temp\":" + String(currentTemp) + ",";
+    state += "\"fan\":" + String(currentFan);
+    state += "}";
+    ws.textAll(state);
 }
 
 void initWebServer() {
@@ -123,13 +140,13 @@ void initWebServer() {
     server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
         turnOnAC();
         request->send(200, "text/plain", "AC turned ON at 24°C");
-        notifyTempChange();
+        sendStateToClients();
     });
 
     server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
         turnOffAC();
         request->send(200, "text/plain", "AC turned OFF");
-        notifyTempChange();
+        sendStateToClients();
     });
 
     // Temperature endpoint
@@ -145,7 +162,27 @@ void initWebServer() {
         }
         setACTemperature(temp);
         request->send(200, "text/plain", "Temperature set to " + String(temp) + "°C");
-        notifyTempChange();
+        sendStateToClients();
+    });
+
+    // Fan endpoint
+    server.on("/set-fan", HTTP_GET, [](AsyncWebServerRequest *request){
+        if(!request->hasParam("fan")) {
+            request->send(400, "text/plain", "Missing 'fan' parameter");
+            return;
+        }
+        String fan = request->getParam("fan")->value();
+        if(fan == "auto") setACFan(FAN_AUTO);
+        else if(fan == "low") setACFan(FAN_LOW);
+        else if(fan == "med") setACFan(FAN_MED);
+        else if(fan == "high") setACFan(FAN_HIGH);
+        else {
+            request->send(400, "text/plain", "Invalid fan mode (auto, low, med, high)");
+            return;
+        }
+        sendStateToClients();
+        request->send(200, "text/plain", "Fan set to " + fan);
+
     });
 
     // WebSocket handler
@@ -153,7 +190,7 @@ void initWebServer() {
                   AwsEventType type, void *arg, uint8_t *data, size_t len) {
         if(type == WS_EVT_CONNECT) {
             Serial.printf("WebSocket client #%u connected\n", client->id());
-            client->text(String(currentTemp)); // send current temp immediately
+            sendStateToClients();
         }
     });
 
@@ -173,13 +210,12 @@ void handleIRReceive() {
     irReceiver.resume();
 }
 
-void turnOnAC(uint8_t temp) {
-    Serial.printf("Turning AC ON at %d°C...\n", temp);
-    currentTemp = temp;
+void turnOnAC() {
+    Serial.printf("Turning AC ON...\n");
     ac.on();
-    ac.setTemp(temp);
-    ac.setMode(kLgAcCool);
-    ac.setFan(kLgAcFanAuto);
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
     ac.send();
     Serial.println("AC ON command sent");
 }
@@ -187,6 +223,11 @@ void turnOnAC(uint8_t temp) {
 void turnOffAC() {
     Serial.println("Turning AC OFF...");
     ac.off();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
     ac.send();
     Serial.println("AC OFF command sent");
 }
@@ -195,9 +236,23 @@ void setACTemperature(uint8_t temp) {
     Serial.printf("Setting AC temperature to %d°C...\n", temp);
     currentTemp = temp;
     ac.on();
+
     ac.setTemp(temp);
-    ac.setMode(kLgAcCool);
-    ac.setFan(kLgAcFanAuto);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
     ac.send();
     Serial.println("AC temperature command sent");
+}
+
+void setACFan(uint8_t fanMode) {
+    Serial.printf("Setting AC fan to %d...\n", fanMode);
+    currentFan = fanMode;
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(fanMode);
+
+    ac.send();
+    Serial.println("AC fan command sent");
 }

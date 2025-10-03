@@ -3,6 +3,10 @@ function updateTempDisplay(value) {
     document.getElementById('temp').value = value;
 }
 
+async function setFan(fan) {
+	await sendApiCall('/set-fan?fan=' + fan);
+}
+
 async function setTemp(temp) {
     await sendApiCall('/set-temp?temp=' + temp);
 }
@@ -41,8 +45,16 @@ function initWebSocket() {
     };
 
     ws.onmessage = (event) => {
-        const temp = event.data;
-        updateTempDisplay(temp);
+		try {
+			console.log(event.data);
+			const state = JSON.parse(event.data);
+			console.log(state);
+			console.log(state.temp);
+			updateTempDisplay(state.temp);
+			//updateFanDisplay(state.fan);
+		} catch (error) {
+			console.log("Invalid message from server: ", even.data);
+		}
     };
 
     ws.onclose = () => {
