@@ -29,7 +29,8 @@
 #define MODE_HEAT kLgAcHeat
 #define MODE_DRY kLgAcDry
 #define MODE_FAN kLgAcFan
-
+#define POWER_OFF false
+#define POWER_ON true
 // ============================
 // Globals
 // ============================
@@ -39,6 +40,7 @@ decode_results irResults;
 uint8_t currentTemp = DEFAULT_TEMP;
 uint8_t currentFan = FAN_AUTO;
 uint8_t currentMode = MODE_COOL;
+bool currentPower = POWER_OFF;
 
 
 AsyncWebServer server(80);
@@ -54,6 +56,7 @@ void initLittleFS();
 void initIR();
 void initWebServer();
 void handleIRReceive();
+void toggleACPower();
 void turnOnAC();
 void turnOffAC();
 void setACTemperature(uint8_t temp);
@@ -149,6 +152,12 @@ void initWebServer() {
         sendStateToClients();
     });
 
+    server.on("/toggle-power", HTTP_GET, [](AsyncWebServerRequest *request){
+        toggleACPower();
+        request->send(200, "text/plain", "AC power toggled");
+        sendStateToClients();
+    });
+
     // Temperature endpoint
     server.on("/set-temp", HTTP_GET, [](AsyncWebServerRequest *request){
         if (!request->hasParam("temp")) {
@@ -208,6 +217,17 @@ void handleIRReceive() {
         Serial.println("New Raw IR Code: 0x" + String(code, HEX));
     }
     irReceiver.resume();
+}
+void toggleACPower() {
+    currentPower = !currentPower;
+    currentPower ? ac.on() : ac.off();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
+    ac.send();
+    Serial.println("AC power command sent");
 }
 
 void turnOnAC() {

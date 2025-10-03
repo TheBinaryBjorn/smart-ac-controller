@@ -29,10 +29,14 @@ body {
 	border-radius: 9999px;
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
+.glass:hover {
+	background: rgba(230, 230, 230, 0.20);
+    border: 2px solid rgba(230, 230, 230, 0.3);
+}
 
 .container {
     width: 100%;
-    max-width: 400px;
+    max-width: 90vw;
     background: rgba(255, 255, 255, 0.40);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -78,37 +82,13 @@ button {
     color: #111;
 }
 
-button:active {
-    transform: scale(0.96);
-}
-
-.btn-on {
-    background: rgba(52, 199, 89, 0.2);
-    border: 1px solid rgba(52, 199, 89, 0.3);
-    color: #34c759;
-}
-
-.btn-on:hover {
-    background: rgba(52, 199, 89, 0.3);
-}
-
-.btn-off {
-    background: rgba(255, 59, 48, 0.2);
-    border: 1px solid rgba(255, 59, 48, 0.3);
-    color: #ff3b30;
-}
-
-.btn-off:hover {
-    background: rgba(255, 59, 48, 0.3);
-}
-
 .temp-control {
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(18px);
     border-radius: 24px;
     padding: 30px;
     border: 1px solid rgba(255, 255, 255, 0.6);
-    margin-bottom: 20px;
+    margin: 20px;
 }
 
 .temp-label {
@@ -189,7 +169,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 .status {
-    margin-top: 24px;
+    margin: 20px;
     padding: 16px 20px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.4);
