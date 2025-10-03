@@ -27,6 +27,13 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
 - Captured my remote codes for on and off.
 - Used a hash set (unordered_set) to filter out the noise on the IR Receiver, cheap ones detect a lot of noise as captured codes.
 - Made a basic loop for On and Off for testing.
+- **(03/10/2025):** 
+  - Converted the server into an async web server with web socket for realtime communication with the clients.
+  - Separated HTML, CSS and JavaScript files, now serving them with static serve instead of using `server.send(200, 'text/html', html);`
+  - Started using `IRremoteESP8266`'s LG objects with `IrLgAc ac(IR_LED_PIN);`.
+  - Started using `IRremoteESP8266`'s `irReceiver` class for the IR Receiver part of the code, though there is no use to it anymore since I'm
+    using the built in LG remote codes that come with `IRremoteESP8266` so I might delete that in the future.
+  - Refactored code to fit Clean Code guidelines.
 
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
