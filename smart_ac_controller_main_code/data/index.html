@@ -1,26 +1,37 @@
 <!DOCTYPE html>
-<html>
-<head></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
+    <div class="container">
+        <h1>Climate</h1>
+        
+        <div class="button-group">
+            <button class="btn-on" onclick="sendApiCall('/turn-on')">Power On</button>
+            <button class="btn-off" onclick="sendApiCall('/turn-off')">Power Off</button>
+        </div>
+        
+        <div class="temp-control">
+            <div class="temp-label">Temperature</div>
+            <div class="temp-display">
+                <span id="display">24</span><span class="temp-unit">°</span>
+            </div>
+            <input type="range" id="temp" min="18" max="30" value="24"
+                   oninput="updateTempDisplay(this.value)">
+            <div class="temp-range">
+                <span>18°</span>
+                <span>30°</span>
+            </div>
+            <button class="set-btn" onclick="setTemp(document.getElementById('temp').value)">Apply</button>
+        </div>
+        
+        <div id="status" class="status">Ready</div>
+    </div>
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-<button onClick="sendApiCall('/turn-on')">Turn On</button>
-<button onClick="sendApiCall('/turn-off')">Turn Off</button>
-<script>
-	async function sendApiCall(endpoint) {
-		try {
-			const response = await fetch(endpoint);
-			if(response.ok) {
-				const message = await response.text();
-				console.log('Success: ' + message);
-			} else {
-				alert('Error: ' + response.status + ' ' + response.statusText);
-			} 
-		} catch (error) {
-			alert('Network error: ' + error);
-		}
-	}
-</script>
+    <script src="script.js"></script>
 </body>
 </html>

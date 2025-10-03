@@ -1,111 +1,202 @@
 #include <Arduino.h>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
-#include <ir_LG.h>  // LG AC protocol
-#include <WebServer.h>
+#include <ir_LG.h>
+#include <IRrecv.h>
+#include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
 #include "secrets.h"
+#include <unordered_set>
 
-#define WEB_SERVER_PORT 80
+// ============================
+// Constants
+// ============================
+#define IR_RECEIVE_PIN 14
+#define IR_LED_PIN 13
+#define DEFAULT_TEMP 24
+#define MIN_TEMP 18
+#define MAX_TEMP 30
 #define SERVER_DOMAIN "smart-ac-controller"
 
-WebServer server(WEB_SERVER_PORT);
+// ============================
+// Globals
+// ============================
+IRLgAc ac(IR_LED_PIN);
+IRrecv irReceiver(IR_RECEIVE_PIN);
+decode_results irResults;
+uint8_t currentTemp = DEFAULT_TEMP;
 
-#define IR_LED_PIN 13  // GPIO pin where your IR LED is connected
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+std::unordered_set<uint32_t> receivedCodes;
 
-IRsend irsend(IR_LED_PIN);  // create IR sender object
+// ============================
+// Function Declarations
+// ============================
+void connectToWiFi();
+void startMDNS();
+void initLittleFS();
+void initIR();
+void initWebServer();
+void handleIRReceive();
+void turnOnAC(uint8_t temp = DEFAULT_TEMP);
+void turnOffAC();
+void setACTemperature(uint8_t temp);
+void notifyTempChange();
 
-// Captured LG AC codes
-uint32_t LG_ON  = 0x8800606;
-uint32_t LG_OFF = 0x88C0051;
-
-void handleRoot() {
-  // Open index.html (gui) in read mode.
-  File file = LittleFS.open("/index.html","r");
-
-  // Check if the file opened correctly.
-  if(!file) {
-    // If it didn't send a 404 not found error.
-    // server.send(response number, response type, response message)
-    server.send(404, "text/plain", "index.html not found");
-    Serial.println("FileSystem(LittleFS): Failed to open index.html.");
-    return;
-  }
-
-  // Read the html content into a string.
-  String html = file.readString();
-
-  // Close the file descriptor (it's a good practice!).
-  file.close();
-
-  // Return the stringifyied html to the one that accessed the endpoint.
-  server.send(200, "text/html", html);
-  Serial.println("Server: index.html served successfully.");
-}
-
+// ============================
+// Setup
+// ============================
 void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("ESP32 IR LED LG AC Test (IRremoteESP8266)");
+    Serial.begin(115200);
+    delay(1000);
 
-  if(LittleFS.begin(true)) {
-    Serial.println("FileSystem(LittleFS): Up.");
-  } else {
-    Serial.println("FileSystem(LittleFS): Failed.");
-  }
+    initLittleFS();
+    connectToWiFi();
+    startMDNS();
+    initIR();
+    initWebServer();
 
-  // Initialize Wi-Fi Connection
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  
-  // Wait for WiFi connection
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi connected!");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Initialize mDNS
-  if(MDNS.begin(SERVER_DOMAIN)) {
-    Serial.println("mDNS responder started");
-    MDNS.addService("http", "tcp", 80);
-  }
-  
-  // Initialize IR sender
-  irsend.begin();
-  Serial.println("IR Sender ready on GPIO13");
-  
-  // Initialize Web Server endpoints
-  server.on("/", handleRoot);
-  server.on("/turn-on", [](){
-    turnOnAC();
-    server.send(200, "text/plain", "AC turned on!");
-  });
-  server.on("/turn-off", [](){
-    turnOffAC();
-    server.send(200, "text/plain", "AC turned off!");
-  });
-  
-  server.begin();
+    Serial.println("Setup complete. Server running!");
 }
 
+// ============================
+// Main Loop
+// ============================
 void loop() {
-  server.handleClient();
+    handleIRReceive();
 }
 
-void turnOnAC() {
-  Serial.println("Sending AC ON command...");
-  irsend.sendLG(LG_ON, 28);  // 28-bit LG code 
-  Serial.println("Sent ON command");
+// ============================
+// Functions
+// ============================
+void connectToWiFi() {
+    Serial.print("Connecting to Wi-Fi...");
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\nConnected! IP: " + WiFi.localIP().toString());
+}
 
+void startMDNS() {
+    if (MDNS.begin(SERVER_DOMAIN)) {
+        Serial.println("mDNS responder started");
+    }
+}
+
+void initLittleFS() {
+    if (LittleFS.begin(true)) {
+        Serial.println("LittleFS mounted successfully");
+    } else {
+        Serial.println("LittleFS mount failed");
+    }
+}
+
+void initIR() {
+    ac.begin();
+    irReceiver.enableIRIn();
+    Serial.println("IR Sender and Receiver initialized");
+}
+
+void notifyTempChange() {
+    ws.textAll(String(currentTemp));
+}
+
+void initWebServer() {
+    // Serve static files
+    server.serveStatic("/style.css", LittleFS, "/style.css");
+    server.serveStatic("/script.js", LittleFS, "/script.js");
+
+    // Root endpoint
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/index.html", "text/html");
+    });
+
+    // Power endpoints
+    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOnAC();
+        request->send(200, "text/plain", "AC turned ON at 24°C");
+        notifyTempChange();
+    });
+
+    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOffAC();
+        request->send(200, "text/plain", "AC turned OFF");
+        notifyTempChange();
+    });
+
+    // Temperature endpoint
+    server.on("/set-temp", HTTP_GET, [](AsyncWebServerRequest *request){
+        if (!request->hasParam("temp")) {
+            request->send(400, "text/plain", "Missing 'temp' parameter");
+            return;
+        }
+        int temp = request->getParam("temp")->value().toInt();
+        if (temp < MIN_TEMP || temp > MAX_TEMP) {
+            request->send(400, "text/plain", "Invalid temperature (18-30)");
+            return;
+        }
+        setACTemperature(temp);
+        request->send(200, "text/plain", "Temperature set to " + String(temp) + "°C");
+        notifyTempChange();
+    });
+
+    // WebSocket handler
+    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, 
+                  AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        if(type == WS_EVT_CONNECT) {
+            Serial.printf("WebSocket client #%u connected\n", client->id());
+            client->text(String(currentTemp)); // send current temp immediately
+        }
+    });
+
+    server.addHandler(&ws);
+
+    server.begin();
+    Serial.println("Async web server started!");
+}
+
+void handleIRReceive() {
+    if(!irReceiver.decode(&irResults)) return;
+
+    uint32_t code = irResults.value;
+    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
+        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
+    }
+    irReceiver.resume();
+}
+
+void turnOnAC(uint8_t temp) {
+    Serial.printf("Turning AC ON at %d°C...\n", temp);
+    currentTemp = temp;
+    ac.on();
+    ac.setTemp(temp);
+    ac.setMode(kLgAcCool);
+    ac.setFan(kLgAcFanAuto);
+    ac.send();
+    Serial.println("AC ON command sent");
 }
 
 void turnOffAC() {
-  Serial.println("Sending AC OFF command...");
-  irsend.sendLG(LG_OFF, 28); // 28-bit LG code
-  Serial.println("Sent OFF command");
+    Serial.println("Turning AC OFF...");
+    ac.off();
+    ac.send();
+    Serial.println("AC OFF command sent");
+}
+
+void setACTemperature(uint8_t temp) {
+    Serial.printf("Setting AC temperature to %d°C...\n", temp);
+    currentTemp = temp;
+    ac.on();
+    ac.setTemp(temp);
+    ac.setMode(kLgAcCool);
+    ac.setFan(kLgAcFanAuto);
+    ac.send();
+    Serial.println("AC temperature command sent");
 }
