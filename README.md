@@ -34,6 +34,7 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
   - Started using `IRremoteESP8266`'s `irReceiver` class for the IR Receiver part of the code, though there is no use to it anymore since I'm
     using the built in LG remote codes that come with `IRremoteESP8266` so I might delete that in the future.
   - Refactored code to fit Clean Code guidelines.
+  - Added a background image also served statically.
 
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
