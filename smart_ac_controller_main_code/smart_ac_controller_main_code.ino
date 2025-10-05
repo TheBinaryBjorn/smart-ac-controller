@@ -37,11 +37,11 @@
 IRLgAc ac(IR_LED_PIN);
 IRrecv irReceiver(IR_RECEIVE_PIN);
 decode_results irResults;
-uint8_t currentTemp = DEFAULT_TEMP;
-uint8_t currentFan = FAN_AUTO;
-uint8_t currentMode = MODE_COOL;
-bool currentPower = POWER_OFF;
 
+bool currentPower = POWER_OFF;
+uint8_t currentMode = MODE_COOL;
+uint8_t currentFan = FAN_AUTO;
+uint8_t currentTemp = DEFAULT_TEMP;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -121,6 +121,7 @@ void initIR() {
 
 void sendStateToClients() {
     String state = "{";
+    state += "\"power\":" + String(currentPower) + ",";
     state += "\"mode\":" + String(currentMode) + ",";
     state += "\"temp\":" + String(currentTemp) + ",";
     state += "\"fan\":" + String(currentFan);
