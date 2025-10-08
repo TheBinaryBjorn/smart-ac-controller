@@ -152,18 +152,6 @@ void initWebServer() {
     });
 
     // Power endpoints
-    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOnAC();
-        request->send(200, "text/plain", "AC turned ON at 24°C");
-        sendStateToClients();
-    });
-
-    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOffAC();
-        request->send(200, "text/plain", "AC turned OFF");
-        sendStateToClients();
-    });
-
     server.on("/toggle-power", HTTP_GET, [](AsyncWebServerRequest *request){
         toggleACPower();
         request->send(200, "text/plain", "AC power toggled");
@@ -256,33 +244,10 @@ void toggleACPower() {
     Serial.println("AC power command sent");
 }
 
-void turnOnAC() {
-    Serial.printf("Turning AC ON...\n");
-    ac.on();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-    
-    ac.send();
-    Serial.println("AC ON command sent");
-}
-
-void turnOffAC() {
-    Serial.println("Turning AC OFF...");
-    ac.off();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-
-    ac.send();
-    Serial.println("AC OFF command sent");
-}
-
 void setACTemperature(uint8_t temp) {
     Serial.printf("Setting AC temperature to %d°C...\n", temp);
     currentTemp = temp;
+    currentPower = POWER_ON;
     ac.on();
 
     ac.setTemp(temp);
@@ -296,6 +261,7 @@ void setACTemperature(uint8_t temp) {
 void setACFan(uint8_t fanMode) {
     Serial.printf("Setting AC fan to %d...\n", fanMode);
     currentFan = fanMode;
+    currentPower = POWER_ON;
 
     ac.on();
     ac.setTemp(currentTemp);
@@ -309,7 +275,7 @@ void setACFan(uint8_t fanMode) {
 void setACMode(uint8_t mode) {
     Serial.printf("Setting AC mode to %d...", mode);
     currentMode = mode;
-
+    currentPower = POWER_ON;
     ac.on();
     ac.setTemp(currentTemp);
     ac.setMode(mode);
@@ -350,4 +316,40 @@ void handleIRReceive() {
         Serial.println("New Raw IR Code: 0x" + String(code, HEX));
     }
     irReceiver.resume();
-}*/
+}
+void turnOnAC() {
+    Serial.printf("Turning AC ON...\n");
+    ac.on();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+    
+    ac.send();
+    Serial.println("AC ON command sent");
+}
+
+    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOnAC();
+        request->send(200, "text/plain", "AC turned ON at 24°C");
+        sendStateToClients();
+    });
+
+    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOffAC();
+        request->send(200, "text/plain", "AC turned OFF");
+        sendStateToClients();
+    });
+
+void turnOffAC() {
+    Serial.println("Turning AC OFF...");
+    ac.off();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
+    ac.send();
+    Serial.println("AC OFF command sent");
+}
+*/
