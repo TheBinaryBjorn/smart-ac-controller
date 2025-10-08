@@ -2,7 +2,7 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_LG.h>
-#include <IRrecv.h>
+
 #include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -10,12 +10,12 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "secrets.h"
-#include <unordered_set>
+
 
 // ============================
 // Constants
 // ============================
-#define IR_RECEIVE_PIN 14
+
 #define IR_LED_PIN 13
 #define DEFAULT_TEMP 24
 #define MIN_TEMP 18
@@ -29,21 +29,23 @@
 #define MODE_HEAT kLgAcHeat
 #define MODE_DRY kLgAcDry
 #define MODE_FAN kLgAcFan
-
+#define POWER_OFF false
+#define POWER_ON true
 // ============================
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
-IRrecv irReceiver(IR_RECEIVE_PIN);
-decode_results irResults;
-uint8_t currentTemp = DEFAULT_TEMP;
-uint8_t currentFan = FAN_AUTO;
-uint8_t currentMode = MODE_COOL;
 
+
+bool currentPower = POWER_OFF;
+uint8_t currentMode = MODE_COOL;
+uint8_t currentFan = FAN_AUTO;
+uint8_t currentTemp = DEFAULT_TEMP;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-std::unordered_set<uint32_t> receivedCodes;
+
+
 
 // ============================
 // Function Declarations
@@ -53,7 +55,7 @@ void startMDNS();
 void initLittleFS();
 void initIR();
 void initWebServer();
-void handleIRReceive();
+void toggleACPower();
 void turnOnAC();
 void turnOffAC();
 void setACTemperature(uint8_t temp);
@@ -80,7 +82,7 @@ void setup() {
 // Main Loop
 // ============================
 void loop() {
-    handleIRReceive();
+    
 }
 
 // ============================
@@ -110,14 +112,15 @@ void initLittleFS() {
     }
 }
 
+
 void initIR() {
     ac.begin();
-    irReceiver.enableIRIn();
-    Serial.println("IR Sender and Receiver initialized");
+    Serial.println("IR Sender initialized");
 }
 
 void sendStateToClients() {
     String state = "{";
+    state += "\"power\":" + String(currentPower) + ",";
     state += "\"mode\":" + String(currentMode) + ",";
     state += "\"temp\":" + String(currentTemp) + ",";
     state += "\"fan\":" + String(currentFan);
@@ -146,6 +149,12 @@ void initWebServer() {
     server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
         turnOffAC();
         request->send(200, "text/plain", "AC turned OFF");
+        sendStateToClients();
+    });
+
+    server.on("/toggle-power", HTTP_GET, [](AsyncWebServerRequest *request){
+        toggleACPower();
+        request->send(200, "text/plain", "AC power toggled");
         sendStateToClients();
     });
 
@@ -185,6 +194,29 @@ void initWebServer() {
 
     });
 
+    // Mode endpoint
+    server.on("/set-mode", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if(!request->hasParam("mode")) {
+            request->send(400, "text/plain", "Missing 'mode' parameter");
+            return;
+        }
+        String mode = request->getParam("mode")->value();
+        if(mode == "cool")
+            setACMode(MODE_COOL);
+        else if(mode == "heat")
+            setACMode(MODE_HEAT);
+        else if(mode == "fan")
+            setACMode(MODE_FAN);
+        else if(mode == "dry")
+            setACMode(MODE_DRY);
+        else {
+            request->send(400, "text/plain", "Invalid mode (cool, heat, fan, dry)");
+            return;
+        }
+        sendStateToClients();
+        request->send(200, "text/plain", "Mode set to " + mode);
+    });
+
     // WebSocket handler
     ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, 
                   AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -200,22 +232,26 @@ void initWebServer() {
     Serial.println("Async web server started!");
 }
 
-void handleIRReceive() {
-    if(!irReceiver.decode(&irResults)) return;
+void toggleACPower() {
+    currentPower = !currentPower;
+    currentPower ? ac.on() : ac.off();
 
-    uint32_t code = irResults.value;
-    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
-        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
-    }
-    irReceiver.resume();
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
+    ac.send();
+    Serial.println("AC power command sent");
 }
 
 void turnOnAC() {
     Serial.printf("Turning AC ON...\n");
     ac.on();
+
     ac.setTemp(currentTemp);
     ac.setMode(currentMode);
     ac.setFan(currentFan);
+    
     ac.send();
     Serial.println("AC ON command sent");
 }
@@ -249,6 +285,7 @@ void setACFan(uint8_t fanMode) {
     Serial.printf("Setting AC fan to %d...\n", fanMode);
     currentFan = fanMode;
 
+    ac.on();
     ac.setTemp(currentTemp);
     ac.setMode(currentMode);
     ac.setFan(fanMode);
@@ -256,3 +293,49 @@ void setACFan(uint8_t fanMode) {
     ac.send();
     Serial.println("AC fan command sent");
 }
+
+void setACMode(uint8_t mode) {
+    Serial.printf("Setting AC mode to %d...", mode);
+    currentMode = mode;
+
+    ac.on();
+    ac.setTemp(currentTemp);
+    ac.setMode(mode);
+    ac.setFan(currentFan);
+    ac.send();
+    Serial.println("AC mode command sent");
+}
+
+// ============================
+// Legacy Code
+// ============================
+/*
+#include <IRrecv.h>
+#define IR_RECEIVE_PIN 14
+IRrecv irReceiver(IR_RECEIVE_PIN);
+decode_results irResults;
+
+#include <unordered_set>
+std::unordered_set<uint32_t> receivedCodes;
+
+void handleIRReceive();
+
+void initIR() {
+    ac.begin();
+    irReceiver.enableIRIn();
+    Serial.println("IR Sender and Receiver initialized");
+}
+
+void loop() {
+    handleIRReceive();
+}
+
+void handleIRReceive() {
+    if(!irReceiver.decode(&irResults)) return;
+
+    uint32_t code = irResults.value;
+    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
+        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
+    }
+    irReceiver.resume();
+}*/
