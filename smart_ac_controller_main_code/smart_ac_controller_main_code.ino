@@ -2,7 +2,7 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_LG.h>
-
+#include <unordered_map>
 #include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -41,6 +41,9 @@ bool currentPower = POWER_OFF;
 uint8_t currentMode = MODE_COOL;
 uint8_t currentFan = FAN_AUTO;
 uint8_t currentTemp = DEFAULT_TEMP;
+
+std::unordered_map<uint8_t, String> fanToString = {{FAN_LOW, "low"}, {FAN_MED, "med"}, {FAN_HIGH, "high"}, {FAN_AUTO,"auto"}};
+std::unordered_map<uint8_t, String> modeToString = {{MODE_COOL, "cool"}, {MODE_HEAT, "heat"}, {MODE_DRY,"dry"}, {MODE_FAN, "fan"}};
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -119,13 +122,22 @@ void initIR() {
 }
 
 void sendStateToClients() {
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), 
+    "{\"power\":%d,\"mode\":\"%s\",\"temp\":%d,\"fan\":\"%s\"}",
+    currentPower,
+    modeToString[currentMode].c_str(),
+    currentTemp,
+    fanToString[currentFan].c_str());
+    /*
     String state = "{";
     state += "\"power\":" + String(currentPower) + ",";
-    state += "\"mode\":" + String(currentMode) + ",";
+    state += "\"mode\":" + "\"" + modeToString[currentMode] + "\"" + ",";
     state += "\"temp\":" + String(currentTemp) + ",";
-    state += "\"fan\":" + String(currentFan);
+    state += "\"fan\":" + "\"" + fanToString[currentFan] + "\"";
     state += "}";
-    ws.textAll(state);
+    */
+    ws.textAll(buffer);
 }
 
 void initWebServer() {
