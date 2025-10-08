@@ -5,15 +5,26 @@ function updateTempDisplay(value) {
 
 const DEFAULT_BUTTON_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.3)";
 const ACTIVE_BUTTON_BACKGROUND_COLOR = "rgba(200, 200, 200, 0.3)";
+const GREEN = "rgba(0, 255, 0, 1)";
+const RED = "rgba(255, 0, 0, 1)";
+
 let powerState;
 let activeModeButton;
 let activeFanButton;
 
 function setPower(btnPower) {
-	if(btnPower) 
-		document.getElementById("btn-power").style.backgroundColor = ACTIVE_BUTTON_BACKGROUND_COLOR;
-	else
-		document.getElementById("btn-power").style.backgroundColor = DEFAULT_BUTTON_BACKGROUND_COLOR;
+	const powerLabelElement = document.getElementById("lbl-power-text");
+	const powerButtonElement = document.getElementById("btn-power");
+	if(btnPower)  {
+		powerLabelElement.style.color = GREEN;
+		powerLabelElement.textContent = "On";
+		powerButtonElement.style.backgroundColor = ACTIVE_BUTTON_BACKGROUND_COLOR;
+	}
+	else {
+		powerLabelElement.style.color = RED;
+		powerLabelElement.textContent = "Off";
+		powerButtonElement.style.backgroundColor = DEFAULT_BUTTON_BACKGROUND_COLOR;
+	}
 }
 
 function setActiveModeButton(value) {
@@ -111,7 +122,8 @@ function initWebSocket() {
 			console.log(state.temp);
 			updateTempDisplay(state.temp);
 			setActiveFanButton(state.fan);
-			setPower(state.power);
+			setActiveModeButton(state.mode);
+			state.power ? setPower(true):setPower(false);
 			
 		} catch (error) {
 			console.log("Invalid message from server: ", event.data);

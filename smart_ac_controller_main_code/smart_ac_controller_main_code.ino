@@ -2,7 +2,7 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_LG.h>
-
+#include <unordered_map>
 #include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -41,6 +41,9 @@ bool currentPower = POWER_OFF;
 uint8_t currentMode = MODE_COOL;
 uint8_t currentFan = FAN_AUTO;
 uint8_t currentTemp = DEFAULT_TEMP;
+
+std::unordered_map<uint8_t, String> fanToString = {{FAN_LOW, "low"}, {FAN_MED, "med"}, {FAN_HIGH, "high"}, {FAN_AUTO,"auto"}};
+std::unordered_map<uint8_t, String> modeToString = {{MODE_COOL, "cool"}, {MODE_HEAT, "heat"}, {MODE_DRY,"dry"}, {MODE_FAN, "fan"}};
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -119,13 +122,22 @@ void initIR() {
 }
 
 void sendStateToClients() {
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), 
+    "{\"power\":%d,\"mode\":\"%s\",\"temp\":%d,\"fan\":\"%s\"}",
+    currentPower,
+    modeToString[currentMode].c_str(),
+    currentTemp,
+    fanToString[currentFan].c_str());
+    /*
     String state = "{";
     state += "\"power\":" + String(currentPower) + ",";
-    state += "\"mode\":" + String(currentMode) + ",";
+    state += "\"mode\":" + "\"" + modeToString[currentMode] + "\"" + ",";
     state += "\"temp\":" + String(currentTemp) + ",";
-    state += "\"fan\":" + String(currentFan);
+    state += "\"fan\":" + "\"" + fanToString[currentFan] + "\"";
     state += "}";
-    ws.textAll(state);
+    */
+    ws.textAll(buffer);
 }
 
 void initWebServer() {
@@ -140,18 +152,6 @@ void initWebServer() {
     });
 
     // Power endpoints
-    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOnAC();
-        request->send(200, "text/plain", "AC turned ON at 24°C");
-        sendStateToClients();
-    });
-
-    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOffAC();
-        request->send(200, "text/plain", "AC turned OFF");
-        sendStateToClients();
-    });
-
     server.on("/toggle-power", HTTP_GET, [](AsyncWebServerRequest *request){
         toggleACPower();
         request->send(200, "text/plain", "AC power toggled");
@@ -244,33 +244,10 @@ void toggleACPower() {
     Serial.println("AC power command sent");
 }
 
-void turnOnAC() {
-    Serial.printf("Turning AC ON...\n");
-    ac.on();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-    
-    ac.send();
-    Serial.println("AC ON command sent");
-}
-
-void turnOffAC() {
-    Serial.println("Turning AC OFF...");
-    ac.off();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-
-    ac.send();
-    Serial.println("AC OFF command sent");
-}
-
 void setACTemperature(uint8_t temp) {
     Serial.printf("Setting AC temperature to %d°C...\n", temp);
     currentTemp = temp;
+    currentPower = POWER_ON;
     ac.on();
 
     ac.setTemp(temp);
@@ -284,6 +261,7 @@ void setACTemperature(uint8_t temp) {
 void setACFan(uint8_t fanMode) {
     Serial.printf("Setting AC fan to %d...\n", fanMode);
     currentFan = fanMode;
+    currentPower = POWER_ON;
 
     ac.on();
     ac.setTemp(currentTemp);
@@ -297,7 +275,7 @@ void setACFan(uint8_t fanMode) {
 void setACMode(uint8_t mode) {
     Serial.printf("Setting AC mode to %d...", mode);
     currentMode = mode;
-
+    currentPower = POWER_ON;
     ac.on();
     ac.setTemp(currentTemp);
     ac.setMode(mode);
@@ -338,4 +316,40 @@ void handleIRReceive() {
         Serial.println("New Raw IR Code: 0x" + String(code, HEX));
     }
     irReceiver.resume();
-}*/
+}
+void turnOnAC() {
+    Serial.printf("Turning AC ON...\n");
+    ac.on();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+    
+    ac.send();
+    Serial.println("AC ON command sent");
+}
+
+    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOnAC();
+        request->send(200, "text/plain", "AC turned ON at 24°C");
+        sendStateToClients();
+    });
+
+    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
+        turnOffAC();
+        request->send(200, "text/plain", "AC turned OFF");
+        sendStateToClients();
+    });
+
+void turnOffAC() {
+    Serial.println("Turning AC OFF...");
+    ac.off();
+
+    ac.setTemp(currentTemp);
+    ac.setMode(currentMode);
+    ac.setFan(currentFan);
+
+    ac.send();
+    Serial.println("AC OFF command sent");
+}
+*/
