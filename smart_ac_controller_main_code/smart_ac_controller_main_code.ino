@@ -195,6 +195,29 @@ void initWebServer() {
 
     });
 
+    // Mode endpoint
+    server.on("/set-mode", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if(!request->hasParam("mode")) {
+            request->send(400, "text/plain", "Missing 'mode' parameter");
+            return;
+        }
+        String mode = request->getParam("mode")->value();
+        if(mode == "cool")
+            setACMode(MODE_COOL);
+        else if(mode == "heat")
+            setACMode(MODE_HEAT);
+        else if(mode == "fan")
+            setACMode(MODE_FAN);
+        else if(mode == "dry")
+            setACMode(MODE_DRY);
+        else {
+            request->send(400, "text/plain", "Invalid mode (cool, heat, fan, dry)");
+            return;
+        }
+        sendStateToClients();
+        request->send(200, "text/plain", "Mode set to " + mode);
+    });
+
     // WebSocket handler
     ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, 
                   AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -272,10 +295,23 @@ void setACFan(uint8_t fanMode) {
     Serial.printf("Setting AC fan to %d...\n", fanMode);
     currentFan = fanMode;
 
+    ac.on();
     ac.setTemp(currentTemp);
     ac.setMode(currentMode);
     ac.setFan(fanMode);
 
     ac.send();
     Serial.println("AC fan command sent");
+}
+
+void setACMode(uint8_t mode) {
+    Serial.printf("Setting AC mode to %d...", mode);
+    currentMode = mode;
+
+    ac.on();
+    ac.setTemp(currentTemp);
+    ac.setMode(mode);
+    ac.setFan(currentFan);
+    ac.send();
+    Serial.println("AC mode command sent");
 }
