@@ -42,7 +42,9 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
   - Fixed the frontend web socket on message function to parse the received json string and update the temp with `state.temp`.
 - **(08/10/2025):**
   - Added mode selection functionality logic to backend.
-  - Deprecated ir receiver logic and removed it from breadboard as it is no longer necessary.  
+  - Deprecated ir receiver logic and removed it from breadboard as it is no longer necessary.
+  - Made pressed button sync across multiple devices with internal state.
+  - Made mode and fan buttons change power state to on.
 
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
