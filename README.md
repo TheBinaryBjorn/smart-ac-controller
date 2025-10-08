@@ -1,5 +1,6 @@
 # smart-ac-controller
 After building some smart lights with rgb strips and ESP32s, I decided to build a smart AC controller for my LG AC and integrate both systems into one diy smart home system in the future.
+![UI](https://github.com/user-attachments/assets/9ba3473e-be38-4bf5-ade9-d8e022705244)
 
 ### Parts I ordered from AliExpress
 - ESP32 Board
