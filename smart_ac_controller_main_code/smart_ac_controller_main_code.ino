@@ -2,7 +2,7 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_LG.h>
-#include <IRrecv.h>
+
 #include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -10,12 +10,12 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "secrets.h"
-#include <unordered_set>
+
 
 // ============================
 // Constants
 // ============================
-#define IR_RECEIVE_PIN 14
+
 #define IR_LED_PIN 13
 #define DEFAULT_TEMP 24
 #define MIN_TEMP 18
@@ -35,8 +35,7 @@
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
-IRrecv irReceiver(IR_RECEIVE_PIN);
-decode_results irResults;
+
 
 bool currentPower = POWER_OFF;
 uint8_t currentMode = MODE_COOL;
@@ -45,7 +44,8 @@ uint8_t currentTemp = DEFAULT_TEMP;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-std::unordered_set<uint32_t> receivedCodes;
+
+
 
 // ============================
 // Function Declarations
@@ -55,7 +55,6 @@ void startMDNS();
 void initLittleFS();
 void initIR();
 void initWebServer();
-void handleIRReceive();
 void toggleACPower();
 void turnOnAC();
 void turnOffAC();
@@ -83,7 +82,7 @@ void setup() {
 // Main Loop
 // ============================
 void loop() {
-    handleIRReceive();
+    
 }
 
 // ============================
@@ -113,10 +112,10 @@ void initLittleFS() {
     }
 }
 
+
 void initIR() {
     ac.begin();
-    irReceiver.enableIRIn();
-    Serial.println("IR Sender and Receiver initialized");
+    Serial.println("IR Sender initialized");
 }
 
 void sendStateToClients() {
@@ -233,15 +232,6 @@ void initWebServer() {
     Serial.println("Async web server started!");
 }
 
-void handleIRReceive() {
-    if(!irReceiver.decode(&irResults)) return;
-
-    uint32_t code = irResults.value;
-    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
-        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
-    }
-    irReceiver.resume();
-}
 void toggleACPower() {
     currentPower = !currentPower;
     currentPower ? ac.on() : ac.off();
@@ -315,3 +305,37 @@ void setACMode(uint8_t mode) {
     ac.send();
     Serial.println("AC mode command sent");
 }
+
+// ============================
+// Legacy Code
+// ============================
+/*
+#include <IRrecv.h>
+#define IR_RECEIVE_PIN 14
+IRrecv irReceiver(IR_RECEIVE_PIN);
+decode_results irResults;
+
+#include <unordered_set>
+std::unordered_set<uint32_t> receivedCodes;
+
+void handleIRReceive();
+
+void initIR() {
+    ac.begin();
+    irReceiver.enableIRIn();
+    Serial.println("IR Sender and Receiver initialized");
+}
+
+void loop() {
+    handleIRReceive();
+}
+
+void handleIRReceive() {
+    if(!irReceiver.decode(&irResults)) return;
+
+    uint32_t code = irResults.value;
+    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
+        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
+    }
+    irReceiver.resume();
+}*/
