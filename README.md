@@ -46,7 +46,19 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
   - Deprecated ir receiver logic and removed it from breadboard as it is no longer necessary.
   - Made pressed button sync across multiple devices with internal state.
   - Made mode and fan buttons change power state to on.
-
+- **(20/10/2025):**
+  - ESP: 
+    - Integrated the SHT30 into the system.
+    - Added `Adafruit_SHT31` library to utilize the sensor.
+    - Added a new function `initSHT31` to initialize the sensor.
+    - Added a new function `sendTempAndHumidityToClients` to send sht30 data to clients using the controller via the WebSocket.
+    - Changed json messages to now have a `{"type":"message_type"}` field.
+  - Frontend:
+    - JavaScript:
+      - Changed socket's on receive behaivor to check the message type and act accordingly.
+      - Added 2 functions `setRoomTempDisplay` and `setHumidityDisplay` to update temp and humidity labels in the html.
+    - HTML:
+      - Added labels and span tags to temperature and humidity display on top of the ui: `lbl-room-temp`, `lbl-room-humidity`.
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
 - IR not activating AC with captured code, Solution was to replace the original black IR LED I put in with a clear one,
