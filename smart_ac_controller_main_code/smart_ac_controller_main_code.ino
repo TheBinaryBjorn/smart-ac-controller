@@ -11,13 +11,22 @@
 #include <AsyncTCP.h>
 #include "secrets.h"
 
+#include <Wire.h>
+#include "Adafruit_SHT31.h"
+
 
 // ============================
 // Constants
 // ============================
 
+// SHT31
+#define SDA_PIN 22
+#define SCL_PIN 23
+#define DEFAULT_I2C_ADDRESS 0x44
+// IR LED
 #define IR_LED_PIN 13
 #define DEFAULT_TEMP 24
+// AC
 #define MIN_TEMP 18
 #define MAX_TEMP 30
 #define SERVER_DOMAIN "smart-ac-controller"
@@ -35,7 +44,10 @@
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
+float temperature;
+float humidity;
 
 bool currentPower = POWER_OFF;
 uint8_t currentMode = MODE_COOL;
@@ -58,6 +70,7 @@ void startMDNS();
 void initLittleFS();
 void initIR();
 void initWebServer();
+void initSHT31();
 void toggleACPower();
 void turnOnAC();
 void turnOffAC();
@@ -77,7 +90,7 @@ void setup() {
     startMDNS();
     initIR();
     initWebServer();
-
+    initSHT31();
     Serial.println("Setup complete. Server running!");
 }
 
@@ -85,7 +98,14 @@ void setup() {
 // Main Loop
 // ============================
 void loop() {
-    
+    temperature = sht31.readTemperature();
+    humidity = sht31.readHumidity();
+    if(!isnan(temperature)&&!isnan(humidity)) {
+        Serial.printf("Temperature: %.2f, Humidity: %.2f%%\n", temperature, humidity);
+    } else {
+        Serial.println("Failed to get Temperature & Humidity readings.");
+    }
+    delay(1000);
 }
 
 // ============================
@@ -121,22 +141,30 @@ void initIR() {
     Serial.println("IR Sender initialized");
 }
 
+void initSHT31() {
+    Wire.begin(SDA_PIN, SCL_PIN);
+    if(!sht31.begin(DEFAULT_I2C_ADDRESS)) {
+        Serial.println("Couldn't find SHT31");
+        // maybe we can handle different logic.
+        while(1) delay(1);
+    }
+    Serial.println("SHT31 up.");
+}
+
 void sendStateToClients() {
     char buffer[128];
     snprintf(buffer, sizeof(buffer), 
-    "{\"power\":%d,\"mode\":\"%s\",\"temp\":%d,\"fan\":\"%s\"}",
+    "{\"type\":\"stateUpdate\",\"power\":%d,\"mode\":\"%s\",\"temp\":%d,\"fan\":\"%s\"}",
     currentPower,
     modeToString[currentMode].c_str(),
     currentTemp,
     fanToString[currentFan].c_str());
-    /*
-    String state = "{";
-    state += "\"power\":" + String(currentPower) + ",";
-    state += "\"mode\":" + "\"" + modeToString[currentMode] + "\"" + ",";
-    state += "\"temp\":" + String(currentTemp) + ",";
-    state += "\"fan\":" + "\"" + fanToString[currentFan] + "\"";
-    state += "}";
-    */
+    ws.textAll(buffer);
+}
+
+void sendTempAndHumidityToClients() {
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "{\"type\":\"sht31Update\",\"temperature\":%.2f,\"humidity\":%.2f}", temperature, humidity);
     ws.textAll(buffer);
 }
 
@@ -352,4 +380,11 @@ void turnOffAC() {
     ac.send();
     Serial.println("AC OFF command sent");
 }
+
+    String state = "{";
+    state += "\"power\":" + String(currentPower) + ",";
+    state += "\"mode\":" + "\"" + modeToString[currentMode] + "\"" + ",";
+    state += "\"temp\":" + String(currentTemp) + ",";
+    state += "\"fan\":" + "\"" + fanToString[currentFan] + "\"";
+    state += "}";
 */
