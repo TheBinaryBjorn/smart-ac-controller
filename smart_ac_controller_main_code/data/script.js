@@ -3,6 +3,14 @@ function updateTempDisplay(value) {
     document.getElementById('temp').value = value;
 }
 
+function setRoomTempDisplay(temperature) {
+	document.getElementById('lbl-room-temp').textContent = temperature + " ℃";
+}
+
+function setHumidityDisplay(humidity) {
+	document.getElementById('lbl-room-humidity').textContent = humidity + "%";
+}
+
 const DEFAULT_BUTTON_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.3)";
 const ACTIVE_BUTTON_BACKGROUND_COLOR = "rgba(200, 200, 200, 0.3)";
 const GREEN = "rgba(0, 255, 0, 1)";
@@ -119,11 +127,16 @@ function initWebSocket() {
 			console.log(event.data);
 			const state = JSON.parse(event.data);
 			console.log(state);
-			console.log(state.temp);
-			updateTempDisplay(state.temp);
-			setActiveFanButton(state.fan);
-			setActiveModeButton(state.mode);
-			state.power ? setPower(true):setPower(false);
+			if(state.type == "stateUpdate") {
+				console.log(state.temp);
+				updateTempDisplay(state.temp);
+				setActiveFanButton(state.fan);
+				setActiveModeButton(state.mode);
+				state.power ? setPower(true):setPower(false);
+			} else if(state.type == "sht31Update") {
+				setRoomTempDisplay(state.temperature);
+				setHumidityDisplay(state.humidity);
+			}
 			
 		} catch (error) {
 			console.log("Invalid message from server: ", event.data);
