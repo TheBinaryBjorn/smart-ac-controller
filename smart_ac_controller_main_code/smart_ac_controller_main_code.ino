@@ -76,6 +76,7 @@ void turnOnAC();
 void turnOffAC();
 void setACTemperature(uint8_t temp);
 void sendStateToClients();
+void sendTempAndHumidityToClients();
 void setACFan(uint8_t fanMode);
 
 // ============================
@@ -101,7 +102,8 @@ void loop() {
     temperature = sht31.readTemperature();
     humidity = sht31.readHumidity();
     if(!isnan(temperature)&&!isnan(humidity)) {
-        Serial.printf("Temperature: %.2f, Humidity: %.2f%%\n", temperature, humidity);
+        Serial.printf("Temperature: %.0f, Humidity: %.0f%%\n", temperature, humidity);
+        sendTempAndHumidityToClients();
     } else {
         Serial.println("Failed to get Temperature & Humidity readings.");
     }
@@ -164,7 +166,7 @@ void sendStateToClients() {
 
 void sendTempAndHumidityToClients() {
     char buffer[128];
-    snprintf(buffer, sizeof(buffer), "{\"type\":\"sht31Update\",\"temperature\":%.2f,\"humidity\":%.2f}", temperature, humidity);
+    snprintf(buffer, sizeof(buffer), "{\"type\":\"sht31Update\",\"temperature\":%.0f,\"humidity\":%.0f}", temperature, humidity);
     ws.textAll(buffer);
 }
 
