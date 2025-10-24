@@ -6,27 +6,18 @@
     <title>Climate</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-img">
-    <div class="container">
+<body>
+    <div class="room-data-card">
         <h1>Climate</h1>
 		<!-- Room Dashboard -->
-		<div class="room-data-dashboard">
+		<div class="flex-row">
 			<!-- Room Data -->
 			<div class="room-data-card">
 				<div class="room-data-item">
 					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bed-double-icon lucide-bed-double"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6"/><path d="M2 18h20"/></svg>
-					Office AC
+					Room Conditions
 				</div>
-				<div class="room-data-item">
-					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power-icon lucide-power">
-						<path d="M12 2v10"/>
-						<path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
-					</svg>
-					Power:
-					<span id="lbl-power-text">
-					Off
-					</span>
-				</div>
+
 				<div class="room-data-item">
 				<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thermometer-icon lucide-thermometer"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 					Temperature: <span id="lbl-room-temp"></span>
@@ -40,7 +31,7 @@
 			<!-- Room Automation -->
 			<div class="room-data-card">
 				<div class="room-data-item">
-					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cog-icon lucide-cog"><path d="M11 10.27 7 3.34"/><path d="m11 13.73-4 6.93"/><path d="M12 22v-2"/><path d="M12 2v2"/><path d="M14 12h8"/><path d="m17 20.66-1-1.73"/><path d="m17 3.34-1 1.73"/><path d="M2 12h2"/><path d="m20.66 17-1.73-1"/><path d="m20.66 7-1.73 1"/><path d="m3.34 17 1.73-1"/><path d="m3.34 7 1.73 1"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8"/></svg>
+				<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-cog-icon lucide-calendar-cog"><path d="m15.228 16.852-.923-.383"/><path d="m15.228 19.148-.923.383"/><path d="M16 2v4"/><path d="m16.47 14.305.382.923"/><path d="m16.852 20.772-.383.924"/><path d="m19.148 15.228.383-.923"/><path d="m19.53 21.696-.382-.924"/><path d="m20.772 16.852.924-.383"/><path d="m20.772 19.148.924.383"/><path d="M21 10.592V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M3 10h18"/><path d="M8 2v4"/><circle cx="18" cy="18" r="3"/></svg>
 					Automation: <span id="lbl-automation-active-status">Inactive</span>
 				</div>
 				<div class="room-data-item">
@@ -65,114 +56,121 @@
 						<option value="dry">Dry</option>
 					</select>
 				</div>
-				<div class="room-data-item">
-					<button>Apply</button>
-					<button>Cancel Automation</button>
+				<div class="room-data-item flex-row">
+					<div class="automation-button">Activate</div>
+					<div class="automation-button">Deactivate</div>
 				</div>
 			</div>
 		</div>
         <div id="status" class="status">Ready</div>
 		
 		<!-- Controls -->
-		<div class="four-item-grid">	
-			<div class="temp-control">
-				<button id="btn-power" class="glass" onclick="sendApiCall('/toggle-power')">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power-icon lucide-power">
-					<path d="M12 2v10"/>
-					<path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
+		<div class="flex-row">	
+			<!-- Power Switch -->
+			<div class="room-data-card">
+				<div class="room-data-item">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power-icon lucide-power">
+						<path d="M12 2v10"/>
+						<path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
 					</svg>
-				</button>
+					Power:
+					<span id="lbl-power-text">
+						Off
+					</span>
+				</div>
+				<div id="btn-power" class="menu-button" onclick="sendApiCall('/toggle-power')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power-icon lucide-power">
+						<path d="M12 2v10"/>
+						<path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
+					</svg>
+					Power
+				</div>
 			</div>
-			
 			<!-- Mode Control -->
-			<div class="temp-control">
-				<div class="temp-label">Mode</div>
-				<div class="four-item-grid">
-					<button id="btn-mode-cool" class="glass" onClick="setMode('cool')">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snowflake-icon lucide-snowflake">
-							<path d="m10 20-1.25-2.5L6 18"/>
-							<path d="M10 4 8.75 6.5 6 6"/>
-							<path d="m14 20 1.25-2.5L18 18"/>
-							<path d="m14 4 1.25 2.5L18 6"/>
-							<path d="m17 21-3-6h-4"/>
-							<path d="m17 3-3 6 1.5 3"/>
-							<path d="M2 12h6.5L10 9"/>
-							<path d="m20 10-1.5 2 1.5 2"/>
-							<path d="M22 12h-6.5L14 15"/>
-							<path d="m4 10 1.5 2L4 14"/>
-							<path d="m7 21 3-6-1.5-3"/>
-							<path d="m7 3 3 6h4"/>
-						</svg>
-						</br>
-						Cool
-					</button>
-					<button id="btn-mode-heat" onClick="setMode('heat')" class="glass">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun">
-						<circle cx="12" cy="12" r="4"/>
-						<path d="M12 2v2"/><path d="M12 20v2"/>
-						<path d="m4.93 4.93 1.41 1.41"/>
-						<path d="m17.66 17.66 1.41 1.41"/>
-						<path d="M2 12h2"/><path d="M20 12h2"/>
-						<path d="m6.34 17.66-1.41 1.41"/>
-						<path d="m19.07 4.93-1.41 1.41"/>
-						</svg>
-						</br>Heat
-					</button>
-					<button id="btn-mode-fan" class="glass" onClick="setMode('fan')">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fan-icon lucide-fan">
-						<path d="M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z"/>
-						<path d="M12 12v.01"/>
-						</svg>
-						</br>Fan
-					</button>
-					<button id="btn-mode-dry" class="glass" onClick="setMode('dry')">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-droplet-icon lucide-droplet">
-						<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
-						</svg>
-						</br>Dry
-					</button>
+			<div class="room-data-card">
+				<div class="room-data-item">Mode: <span id="lbl-active-mode">...</></div>
+				<div id="btn-mode-cool" class="menu-button" onClick="setMode('cool')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snowflake-icon lucide-snowflake">
+						<path d="m10 20-1.25-2.5L6 18"/>
+						<path d="M10 4 8.75 6.5 6 6"/>
+						<path d="m14 20 1.25-2.5L18 18"/>
+						<path d="m14 4 1.25 2.5L18 6"/>
+						<path d="m17 21-3-6h-4"/>
+						<path d="m17 3-3 6 1.5 3"/>
+						<path d="M2 12h6.5L10 9"/>
+						<path d="m20 10-1.5 2 1.5 2"/>
+						<path d="M22 12h-6.5L14 15"/>
+						<path d="m4 10 1.5 2L4 14"/>
+						<path d="m7 21 3-6-1.5-3"/>
+						<path d="m7 3 3 6h4"/>
+					</svg>
+					Cool
+				</div>
+				<div id="btn-mode-heat" onClick="setMode('heat')" class="menu-button">
+				<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun">
+					<circle cx="12" cy="12" r="4"/>
+					<path d="M12 2v2"/><path d="M12 20v2"/>
+					<path d="m4.93 4.93 1.41 1.41"/>
+					<path d="m17.66 17.66 1.41 1.41"/>
+					<path d="M2 12h2"/><path d="M20 12h2"/>
+					<path d="m6.34 17.66-1.41 1.41"/>
+					<path d="m19.07 4.93-1.41 1.41"/>
+					</svg>
+					Heat
+				</div>
+				<div id="btn-mode-fan" class="menu-button" onClick="setMode('fan')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fan-icon lucide-fan">
+					<path d="M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z"/>
+					<path d="M12 12v.01"/>
+					</svg>
+					Fan
+				</div>
+				<div id="btn-mode-dry" class="menu-button" onClick="setMode('dry')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-droplet-icon lucide-droplet">
+					<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
+					</svg>
+					Dry
 				</div>
 			</div>
 			
 			<!-- Fan Control -->
-			<div class="temp-control">
-				<div class="temp-label">Fan Speed</div>
-				<div class="four-item-grid">
-					<button id="btn-fan-auto" class="glass" onClick="setFan('auto')">
-						</br>Auto
-					</button>
-					<button id="btn-fan-low" class="glass" onClick="setFan('low')">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-low-icon lucide-signal-low">
-						<path d="M2 20h.01"/>
-						<path d="M7 20v-4"/>
-						</svg>
-						</br>Low
-					</button>
-					<button id="btn-fan-med" class="glass" onClick="setFan('med')">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-medium-icon lucide-signal-medium">
-						<path d="M2 20h.01"/>
-						<path d="M7 20v-4"/>
-						<path d="M12 20v-8"/>
-						</svg>
-						</br>Med
-					</button>
-					<button id="btn-fan-high" class="glass" onClick="setFan('high')">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-high-icon lucide-signal-high">
-						<path d="M2 20h.01"/>
-						<path d="M7 20v-4"/>
-						<path d="M12 20v-8"/>
-						<path d="M17 20V8"/>
-						</svg>
-						</br>High
-					</button>
+			<div class="room-data-card">
+				<div class="room-data-item">Fan Speed: <span id="lbl-active-fan-speed">...</span></div>
+				<div id="btn-fan-auto" class="menu-button" onClick="setFan('auto')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cog-icon lucide-cog"><path d="M11 10.27 7 3.34"/><path d="m11 13.73-4 6.93"/><path d="M12 22v-2"/><path d="M12 2v2"/><path d="M14 12h8"/><path d="m17 20.66-1-1.73"/><path d="m17 3.34-1 1.73"/><path d="M2 12h2"/><path d="m20.66 17-1.73-1"/><path d="m20.66 7-1.73 1"/><path d="m3.34 17 1.73-1"/><path d="m3.34 7 1.73 1"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="8"/></svg>
+					Auto
+				</div>
+				<div id="btn-fan-low" class="menu-button" onClick="setFan('low')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-low-icon lucide-signal-low">
+					<path d="M2 20h.01"/>
+					<path d="M7 20v-4"/>
+					</svg>
+					Low
+				</div>
+				<div id="btn-fan-med" class="menu-button" onClick="setFan('med')">
+				<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-medium-icon lucide-signal-medium">
+					<path d="M2 20h.01"/>
+					<path d="M7 20v-4"/>
+					<path d="M12 20v-8"/>
+					</svg>
+					Medium
+				</div>
+				<div id="btn-fan-high" class="menu-button" onClick="setFan('high')">
+					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-signal-high-icon lucide-signal-high">
+					<path d="M2 20h.01"/>
+					<path d="M7 20v-4"/>
+					<path d="M12 20v-8"/>
+					<path d="M17 20V8"/>
+					</svg>
+					High
 				</div>
 			</div>
 			
 			<!-- Temp Control -->
-			<div class="temp-control">
-				<div class="temp-label">Temperature</div>
+			<div class="room-data-card">
+				<div class="room-data-item">Temperature</div>
 				<div class="temp-display">
-					<span id="display">24</span><span class="temp-unit">°</span>
+					<span id="display">24</span><span class="">°C</span>
 				</div>
 				<input type="range" id="temp" min="18" max="30" value="24"
 					   oninput="updateTempDisplay(this.value)">
@@ -181,10 +179,9 @@
 					<span>30°</span>
 				</div>
 				<button class="set-btn glass" onclick="setTemp(document.getElementById('temp').value)">Apply</button>
-			</div>	
+			</div>
 		</div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
