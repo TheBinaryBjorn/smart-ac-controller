@@ -3,6 +3,29 @@
             padding: 0;
             box-sizing: border-box;
         }
+		
+		.room-data-card {
+			background: rgba(255, 255, 255, 1);
+            backdrop-filter: blur(18px);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid rgba(200, 200, 200, 1);
+		}
+		
+		.room-data-item-icon {
+			width: 32px;
+			height: 32px;
+			background: rgba(160, 240, 240, 1);
+			border-radius: 9999px;
+			padding: 4px;
+		}
+		
+		.room-data-item {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			gap: 8px;
+		}
 
         .bg-img {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
