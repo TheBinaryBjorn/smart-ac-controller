@@ -1,6 +1,6 @@
 # smart-ac-controller
 After building some smart lights with rgb strips and ESP32s, I decided to build a smart AC controller for my LG AC and integrate both systems into one diy smart home system in the future.
-<img width="1264" height="804" alt="image" src="https://github.com/user-attachments/assets/a7a8fc92-1184-4c31-bd51-1893703e5307" />
+<img width="724" height="779" alt="image" src="https://github.com/user-attachments/assets/cf43e864-ff88-492f-a601-9f89c64eae81" />
 
 
 
@@ -65,6 +65,12 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
 - **(22/10/2025):**
   - Soldered all components together on a perfboard.
 ![WhatsApp Image 2025-10-22 at 11 51 42_d5eb5c5b](https://github.com/user-attachments/assets/64d9dcc1-2834-4a01-9c18-919ec71440b1)
+
+- **(24/10/2025):**
+  - Updated UI
+  - Added automation UI skeleton
+  - Refactored code to use roomTemperature instead of temperature for cleaner code, not to confuse room temperature and ac temperature.
+<img width="724" height="779" alt="image" src="https://github.com/user-attachments/assets/19311ab9-24cc-404f-a002-b83e0fb4c7bf" />
 
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
