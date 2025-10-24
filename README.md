@@ -62,6 +62,10 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
       - Added 2 functions `setRoomTempDisplay` and `setHumidityDisplay` to update temp and humidity labels in the html.
     - HTML:
       - Added labels and span tags to temperature and humidity display on top of the ui: `lbl-room-temp`, `lbl-room-humidity`.
+- **(22/10/2025):**
+  - Soldered all components together on a perfboard.
+![WhatsApp Image 2025-10-22 at 11 51 42_d5eb5c5b](https://github.com/user-attachments/assets/64d9dcc1-2834-4a01-9c18-919ec71440b1)
+
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
 - IR not activating AC with captured code, Solution was to replace the original black IR LED I put in with a clear one,
