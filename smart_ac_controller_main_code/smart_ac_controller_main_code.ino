@@ -46,7 +46,7 @@
 IRLgAc ac(IR_LED_PIN);
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
-float temperature;
+float roomTemperature;
 float humidity;
 
 bool currentPower = POWER_OFF;
@@ -75,6 +75,7 @@ void toggleACPower();
 void turnOnAC();
 void turnOffAC();
 void setACTemperature(uint8_t temp);
+void setACMode(uint8_t mode);
 void sendStateToClients();
 void sendTempAndHumidityToClients();
 void setACFan(uint8_t fanMode);
@@ -99,13 +100,13 @@ void setup() {
 // Main Loop
 // ============================
 void loop() {
-    temperature = sht31.readTemperature();
+    roomTemperature = sht31.readTemperature();
     humidity = sht31.readHumidity();
-    if(!isnan(temperature)&&!isnan(humidity)) {
-        Serial.printf("Temperature: %.0f, Humidity: %.0f%%\n", temperature, humidity);
+    if(!isnan(roomTemperature)&&!isnan(humidity)) {
+        Serial.printf("Room Temperature: %.0f, Humidity: %.0f%%\n", roomTemperature, humidity);
         sendTempAndHumidityToClients();
     } else {
-        Serial.println("Failed to get Temperature & Humidity readings.");
+        Serial.println("Failed to get Room Temperature & Humidity readings.");
     }
     delay(1000);
 }
@@ -166,7 +167,7 @@ void sendStateToClients() {
 
 void sendTempAndHumidityToClients() {
     char buffer[128];
-    snprintf(buffer, sizeof(buffer), "{\"type\":\"sht31Update\",\"temperature\":%.0f,\"humidity\":%.0f}", temperature, humidity);
+    snprintf(buffer, sizeof(buffer), "{\"type\":\"sht31Update\",\"roomTemperature\":%.0f,\"humidity\":%.0f}", roomTemperature, humidity);
     ws.textAll(buffer);
 }
 

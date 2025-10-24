@@ -3,8 +3,8 @@ function updateTempDisplay(value) {
     document.getElementById('temp').value = value;
 }
 
-function setRoomTempDisplay(temperature) {
-	document.getElementById('lbl-room-temp').textContent = temperature + " ℃";
+function setRoomTempDisplay(roomTemperature) {
+	document.getElementById('lbl-room-temp').textContent = roomTemperature + " ℃";
 }
 
 function setHumidityDisplay(humidity) {
@@ -134,7 +134,7 @@ function initWebSocket() {
 				setActiveModeButton(state.mode);
 				state.power ? setPower(true):setPower(false);
 			} else if(state.type == "sht31Update") {
-				setRoomTempDisplay(state.temperature);
+				setRoomTempDisplay(state.roomTemperature);
 				setHumidityDisplay(state.humidity);
 			}
 			
