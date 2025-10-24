@@ -4,7 +4,7 @@ function updateTempDisplay(value) {
 }
 
 function setRoomTempDisplay(roomTemperature) {
-	document.getElementById('lbl-room-temp').textContent = roomTemperature + " ℃";
+	document.getElementById('lbl-room-temp').textContent = roomTemperature + "℃";
 }
 
 function setHumidityDisplay(humidity) {
