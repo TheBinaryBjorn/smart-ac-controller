@@ -40,11 +40,23 @@
 #define MODE_FAN kLgAcFan
 #define POWER_OFF false
 #define POWER_ON true
+// ===========================
+// Enums
+// ===========================
+enum AutomationMode {
+    Off,
+    Temperature,
+    Time,
+    TimeAndTemperature
+};
+
 // ============================
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
+
+AutomationMode automationMode = Off;
 
 float roomTemperature;
 float humidity;
@@ -107,6 +119,14 @@ void loop() {
         sendTempAndHumidityToClients();
     } else {
         Serial.println("Failed to get Room Temperature & Humidity readings.");
+    }
+    switch(automationMode) {
+        case Temperature:
+            Serial.println("Temperature Automation!");
+            break;
+        case Time:
+            // To be implemented
+            break;
     }
     delay(1000);
 }
@@ -246,6 +266,49 @@ void initWebServer() {
         }
         sendStateToClients();
         request->send(200, "text/plain", "Mode set to " + mode);
+    });
+
+    // Automation endpoint
+    server.on("/set-automation", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if(!request->hasParam("automation_mode")) {
+            automationMode = Off;
+            request->send(400, "text/plain", "Missing 'automation_mode' parameter");
+            return;
+        }
+        String receivedAutomationMode = request->getParam("automation_mode")->value();
+        if(receivedAutomationMode == "off") {
+            automationMode = Off;
+            request->send(200, "text/plain", "Automation mode set to " + receivedAutomationMode);
+            return;
+        }
+        if(!request->hasParam("room_temp")) {
+            automationMode = Off;
+            request->send(400, "text/plain", "Missing 'room_temp' parameter");
+            return;
+        }
+        if(!request->hasParam("ac_temp")) {
+            automationMode = Off;
+            request->send(400, "text/plain", "Missing 'ac_temp' parameter");
+            return;
+        }
+        if(!request->hasParam("ac_mode")) {
+            automationMode = Off;
+            request->send(400, "text/plain", "Missing 'ac_mode' parameter");
+            return;
+        }
+
+        if(receivedAutomationMode == "temperature_automation") {
+            automationMode = Temperature;
+        } else if(receivedAutomationMode == "time_automation") {
+            automationMode = Time;
+        } else if(receivedAutomationMode == "time_and_temperature_automation") {
+            automationMode = TimeAndTemperature;
+        } else {
+            automationMode = Off;
+            request->send(400, "text/plain", "Invalid automation mode");
+            return;
+        }
+        request->send(200, "text/plain", "Automation mode set to " + receivedAutomationMode);
     });
 
     // WebSocket handler
