@@ -1,5 +1,6 @@
 const DEFAULT_BUTTON_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.3)";
 const ACTIVE_BUTTON_BACKGROUND_COLOR = "rgba(200, 200, 200, 0.3)";
+const GRAY = "rgba(240, 240, 240, 1)";
 const GREEN = "rgba(0, 255, 0, 1)";
 const RED = "rgba(255, 0, 0, 1)";
 const ROOM_TEMP_UPPER_LIMIT = 50;
@@ -107,19 +108,30 @@ function setActiveFanButton(fanMode) {
 	document.getElementById(activeFanButton).style.backgroundColor = ACTIVE_BUTTON_BACKGROUND_COLOR;
 }
 
+function setAutomationLabel(automationLabelText) {
+	document.getElementById('lbl-automation-active-status').textContent = automationLabelText;
+}
+
+function setAutomationLabelColor(automationLabelColor){
+	document.getElementById('lbl-automation-active-status').style.color = automationLabelColor;
+}
+
 async function setAutomation(automationMode) {
 	if(automationMode !== 'off') {
 		if(!validateAutomationInput()) {
 			return;
 		}
-		const automationMode = "temperature_automation"; //temporary for now.
 		const roomTemp = document.getElementById('automation-room-temp-input').value;
 		const acTemp = document.getElementById('automation-ac-temp-input').value;
 		const acMode = document.getElementById('automation-ac-mode-input').value;
 		
 		await sendApiCall(`/set-automation?automation_mode=${automationMode}&room_temp=${roomTemp}&ac_temp=${acTemp}&ac_mode=${acMode}`);
+		setAutomationLabel('Active');
+		setAutomationLabelColor(GREEN);
 	} else {
 		await sendApiCall(`/set-automation?automation_mode=off`);
+		setAutomationLabel('Inactive');
+		setAutomationLabelColor(GRAY);
 	}
 }
 

@@ -39,12 +39,11 @@
 						<path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>
 					</svg>
 					When room temperature reaches: <input id="automation-room-temp-input" type="text">°C,
-					</input>
 					
 				</div>
 				<div class="room-data-item">
 				<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-air-vent-icon lucide-air-vent"><path d="M18 17.5a2.5 2.5 0 1 1-4 2.03V12"/><path d="M6 12H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 8h12"/><path d="M6.6 15.572A2 2 0 1 0 10 17v-5"/></svg>
-					set ac to <input id="automation-ac-temp-input" type="text"></input>°C,
+					set ac to <input id="automation-ac-temp-input" type="text">°C,
 				</div>
 				<div class="room-data-item">
 					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-snow-icon lucide-sun-snow"><path d="M10 21v-1"/><path d="M10 4V3"/><path d="M10 9a3 3 0 0 0 0 6"/><path d="m14 20 1.25-2.5L18 18"/><path d="m14 4 1.25 2.5L18 6"/><path d="m17 21-3-6 1.5-3H22"/><path d="m17 3-3 6 1.5 3"/><path d="M2 12h1"/><path d="m20 10-1.5 2 1.5 2"/><path d="m3.64 18.36.7-.7"/><path d="m4.34 6.34-.7-.7"/></svg>
@@ -57,7 +56,7 @@
 					</select>
 				</div>
 				<div class="room-data-item flex-row">
-					<div class="automation-button">Activate</div>
+					<div onclick="setAutomation('temperature_automation')" class="automation-button">Activate</div>
 					<div onclick="setAutomation('off')" class="automation-button">Deactivate</div>
 				</div>
 			</div>
@@ -88,7 +87,7 @@
 			</div>
 			<!-- Mode Control -->
 			<div class="room-data-card">
-				<div class="room-data-item">Mode: <span id="lbl-active-mode">...</></div>
+				<div class="room-data-item">Mode: <span id="lbl-active-mode">...<span/></div>
 				<div id="btn-mode-cool" class="menu-button" onClick="setMode('cool')">
 					<svg class="room-data-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snowflake-icon lucide-snowflake">
 						<path d="m10 20-1.25-2.5L6 18"/>
