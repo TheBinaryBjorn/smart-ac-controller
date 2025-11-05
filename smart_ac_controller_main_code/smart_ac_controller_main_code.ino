@@ -3,6 +3,7 @@
 #include <IRsend.h>
 #include <ir_LG.h>
 #include <unordered_map>
+#include <map>
 #include <IRutils.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -10,7 +11,6 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "secrets.h"
-
 #include <Wire.h>
 #include "Adafruit_SHT31.h"
 
@@ -40,6 +40,30 @@
 #define MODE_FAN kLgAcFan
 #define POWER_OFF false
 #define POWER_ON true
+
+// ===========================
+// Enums
+// ===========================
+enum AutomationMode {
+    Off,
+    Temperature,
+    Time,
+    TimeAndTemperature
+};
+
+std::map<String, int> modeStringToConstant = {{"cool", MODE_COOL}, {"heat", MODE_HEAT}, {"dry", MODE_DRY}, {"fan", MODE_FAN}};
+
+struct ActiveAutomation {
+    AutomationMode automationMode;
+    int roomTempToActivateAutomation;
+    int acTempToSetOnActivation;
+    int acModeToSetOnActivation;
+};
+
+ActiveAutomation automation = {Off, 0, 0, 0};
+
+
+
 // ============================
 // Globals
 // ============================
@@ -93,6 +117,7 @@ void setup() {
     initIR();
     initWebServer();
     initSHT31();
+
     Serial.println("Setup complete. Server running!");
 }
 
@@ -107,6 +132,20 @@ void loop() {
         sendTempAndHumidityToClients();
     } else {
         Serial.println("Failed to get Room Temperature & Humidity readings.");
+    }
+    switch(automation.automationMode) {
+        case Temperature:
+            Serial.println("Temperature Automation!");
+            if(roomTemperature >= automation.roomTempToActivateAutomation) {
+                if(currentTemp != automation.acTempToSetOnActivation || currentMode != automation.acModeToSetOnActivation || !currentPower) {
+                    setACTemperature(automation.acTempToSetOnActivation);
+                    setACMode(automation.acModeToSetOnActivation);
+                    sendStateToClients();
+                }
+            }
+            break;
+        case Off:
+            break;
     }
     delay(1000);
 }
@@ -149,7 +188,7 @@ void initSHT31() {
     if(!sht31.begin(DEFAULT_I2C_ADDRESS)) {
         Serial.println("Couldn't find SHT31");
         // maybe we can handle different logic.
-        while(1) delay(1);
+        return;
     }
     Serial.println("SHT31 up.");
 }
@@ -248,6 +287,60 @@ void initWebServer() {
         request->send(200, "text/plain", "Mode set to " + mode);
     });
 
+    // Automation endpoint
+    server.on("/set-automation", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if(!request->hasParam("automation_mode")) {
+            automation.automationMode = Off;
+            request->send(400, "text/plain", "Missing 'automation_mode' parameter");
+            return;
+        }
+        String receivedAutomationMode = request->getParam("automation_mode")->value();
+        if(receivedAutomationMode == "off") {
+            automation.automationMode = Off;
+            request->send(200, "text/plain", "Automation mode set to " + receivedAutomationMode);
+            return;
+        }
+
+        if(!request->hasParam("room_temp")) {
+            automation.automationMode = Off;
+            request->send(400, "text/plain", "Missing 'room_temp' parameter");
+            return;
+        }
+        if(!request->hasParam("ac_temp")) {
+            automation.automationMode = Off;
+            request->send(400, "text/plain", "Missing 'ac_temp' parameter");
+            return;
+        }
+        if(!request->hasParam("ac_mode")) {
+            automation.automationMode = Off;
+            request->send(400, "text/plain", "Missing 'ac_mode' parameter");
+            return;
+        }
+        int receivedRoomTemp = request->getParam("room_temp")->value().toInt();
+        int receivedAcTemp = request->getParam("ac_temp")->value().toInt();
+        String receivedAcMode = request->getParam("ac_mode")->value();
+        if(!modeStringToConstant.count(receivedAcMode)) {
+            request->send(400, "text/plain", "Invalid AC Mode value!");
+            return;
+        }
+        if(receivedAutomationMode == "temperature_automation") {
+            automation.automationMode = Temperature;
+            automation.roomTempToActivateAutomation = receivedRoomTemp;
+            automation.acTempToSetOnActivation = receivedAcTemp;
+            // should be validated.
+            automation.acModeToSetOnActivation = modeStringToConstant[receivedAcMode];
+        } else if(receivedAutomationMode == "time_automation") {
+            automation.automationMode = Time;
+        } else if(receivedAutomationMode == "time_and_temperature_automation") {
+            automation.automationMode = TimeAndTemperature;
+        } else {
+            automation.automationMode = Off;
+            request->send(400, "text/plain", "Invalid automation mode");
+            return;
+        }
+        request->send(200, "text/plain", "Automation mode set to " + receivedAutomationMode);
+    });
+
     // WebSocket handler
     ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, 
                   AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -314,80 +407,3 @@ void setACMode(uint8_t mode) {
     ac.send();
     Serial.println("AC mode command sent");
 }
-
-// ============================
-// Legacy Code
-// ============================
-/*
-#include <IRrecv.h>
-#define IR_RECEIVE_PIN 14
-IRrecv irReceiver(IR_RECEIVE_PIN);
-decode_results irResults;
-
-#include <unordered_set>
-std::unordered_set<uint32_t> receivedCodes;
-
-void handleIRReceive();
-
-void initIR() {
-    ac.begin();
-    irReceiver.enableIRIn();
-    Serial.println("IR Sender and Receiver initialized");
-}
-
-void loop() {
-    handleIRReceive();
-}
-
-void handleIRReceive() {
-    if(!irReceiver.decode(&irResults)) return;
-
-    uint32_t code = irResults.value;
-    if (code != 0 && code != 0xFFFFFFFF && receivedCodes.insert(code).second) {
-        Serial.println("New Raw IR Code: 0x" + String(code, HEX));
-    }
-    irReceiver.resume();
-}
-void turnOnAC() {
-    Serial.printf("Turning AC ON...\n");
-    ac.on();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-    
-    ac.send();
-    Serial.println("AC ON command sent");
-}
-
-    server.on("/turn-on", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOnAC();
-        request->send(200, "text/plain", "AC turned ON at 24°C");
-        sendStateToClients();
-    });
-
-    server.on("/turn-off", HTTP_GET, [](AsyncWebServerRequest *request){
-        turnOffAC();
-        request->send(200, "text/plain", "AC turned OFF");
-        sendStateToClients();
-    });
-
-void turnOffAC() {
-    Serial.println("Turning AC OFF...");
-    ac.off();
-
-    ac.setTemp(currentTemp);
-    ac.setMode(currentMode);
-    ac.setFan(currentFan);
-
-    ac.send();
-    Serial.println("AC OFF command sent");
-}
-
-    String state = "{";
-    state += "\"power\":" + String(currentPower) + ",";
-    state += "\"mode\":" + "\"" + modeToString[currentMode] + "\"" + ",";
-    state += "\"temp\":" + String(currentTemp) + ",";
-    state += "\"fan\":" + "\"" + fanToString[currentFan] + "\"";
-    state += "}";
-*/

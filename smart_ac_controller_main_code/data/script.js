@@ -1,3 +1,45 @@
+const DEFAULT_BUTTON_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.3)";
+const ACTIVE_BUTTON_BACKGROUND_COLOR = "rgba(200, 200, 200, 0.3)";
+const GRAY = "rgba(240, 240, 240, 1)";
+const GREEN = "rgba(0, 255, 0, 1)";
+const RED = "rgba(255, 0, 0, 1)";
+const ROOM_TEMP_UPPER_LIMIT = 50;
+const ROOM_TEMP_LOWER_LIMIT = -50;
+const AC_TEMP_UPPER_LIMIT = 30;
+const AC_TEMP_LOWER_LIMIT = 18;
+const VALID_MODES = ['cool', 'heat', 'fan', 'dry'];
+
+let powerState;
+let activeModeButton;
+let activeFanButton;
+
+function validateAutomationInput() {
+	const roomTemperatureInputValue = document.getElementById('automation-room-temp-input').value;
+	const acTemperatureInputValue = document.getElementById('automation-ac-temp-input').value;
+	const acModeInputValue = document.getElementById('automation-ac-mode-input').value;
+	
+	const roomTemp = parseInt(roomTemperatureInputValue);
+	const acTemp = parseInt(acTemperatureInputValue);
+	const acMode = acModeInputValue.trim();
+	
+	if(isNaN(roomTemp) || roomTemp < ROOM_TEMP_LOWER_LIMIT || roomTemp > ROOM_TEMP_UPPER_LIMIT) {
+		alert('Please enter a valid room temperature (-50 to 50°C)');
+		return false;
+	}
+	
+	if(isNaN(acTemp) || acTemp < AC_TEMP_LOWER_LIMIT || acTemp > AC_TEMP_UPPER_LIMIT) {
+		alert('Please enter a valid AC temperature (18 to 30°C)');
+		return false;
+	}
+	
+	if(!VALID_MODES.includes(acMode)) {
+		alert('Please select a valid AC mode');
+		return false;
+	}
+	
+	return true;
+}
+
 function updateTempDisplay(value) {
     document.getElementById('display').textContent = value;
     document.getElementById('temp').value = value;
@@ -10,15 +52,6 @@ function setRoomTempDisplay(roomTemperature) {
 function setHumidityDisplay(humidity) {
 	document.getElementById('lbl-room-humidity').textContent = humidity + "%";
 }
-
-const DEFAULT_BUTTON_BACKGROUND_COLOR = "rgba(255, 255, 255, 0.3)";
-const ACTIVE_BUTTON_BACKGROUND_COLOR = "rgba(200, 200, 200, 0.3)";
-const GREEN = "rgba(0, 255, 0, 1)";
-const RED = "rgba(255, 0, 0, 1)";
-
-let powerState;
-let activeModeButton;
-let activeFanButton;
 
 function setPower(btnPower) {
 	const powerLabelElement = document.getElementById("lbl-power-text");
@@ -73,6 +106,33 @@ function setActiveFanButton(fanMode) {
 			break;
 	}
 	document.getElementById(activeFanButton).style.backgroundColor = ACTIVE_BUTTON_BACKGROUND_COLOR;
+}
+
+function setAutomationLabel(automationLabelText) {
+	document.getElementById('lbl-automation-active-status').textContent = automationLabelText;
+}
+
+function setAutomationLabelColor(automationLabelColor){
+	document.getElementById('lbl-automation-active-status').style.color = automationLabelColor;
+}
+
+async function setAutomation(automationMode) {
+	if(automationMode !== 'off') {
+		if(!validateAutomationInput()) {
+			return;
+		}
+		const roomTemp = document.getElementById('automation-room-temp-input').value;
+		const acTemp = document.getElementById('automation-ac-temp-input').value;
+		const acMode = document.getElementById('automation-ac-mode-input').value;
+		
+		await sendApiCall(`/set-automation?automation_mode=${automationMode}&room_temp=${roomTemp}&ac_temp=${acTemp}&ac_mode=${acMode}`);
+		setAutomationLabel('Active');
+		setAutomationLabelColor(GREEN);
+	} else {
+		await sendApiCall(`/set-automation?automation_mode=off`);
+		setAutomationLabel('Inactive');
+		setAutomationLabelColor(GRAY);
+	}
 }
 
 async function setFan(fan) {
