@@ -72,6 +72,10 @@ After building some smart lights with rgb strips and ESP32s, I decided to build 
   - Refactored code to use roomTemperature instead of temperature for cleaner code, not to confuse room temperature and ac temperature.
 <img width="724" height="779" alt="image" src="https://github.com/user-attachments/assets/19311ab9-24cc-404f-a002-b83e0fb4c7bf" />
 
+- **(05/11/2025):**
+  - Added automation functionality.
+  - Updated `.ino`, `.js`, `.html` files to support it.
+
 ### Issues I ran into (and how I fixed them)
 - ESP32 Core 3.3.1 being incompatible with IRremoteESP8266, Solution was to downgrade to ESP32 2.0.17
 - IR not activating AC with captured code, Solution was to replace the original black IR LED I put in with a clear one,
