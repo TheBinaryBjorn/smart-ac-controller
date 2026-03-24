@@ -1,4 +1,6 @@
 # smart-ac-controller
+![Repo Views](https://komarev.com/ghpvc/?username=TheBinaryBjorn&repo=smart-ac-controller&label=REPOSITORY+VIEWS&color=blue&style=flat-square) 
+
 After building some smart lights with rgb strips and ESP32s, I decided to build a smart AC controller for my LG AC and integrate both systems into one diy smart home system in the future.
 <img width="724" height="779" alt="image" src="https://github.com/user-attachments/assets/cf43e864-ff88-492f-a601-9f89c64eae81" />
 
