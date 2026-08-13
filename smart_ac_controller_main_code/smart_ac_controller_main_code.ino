@@ -22,7 +22,7 @@
 // SHT31
 #define SDA_PIN 22
 #define SCL_PIN 23
-#define DEFAULT_I2C_ADDRESS 0x44
+const uint8_t DEFAULT_I2C_ADDRESS{0x44};
 // IR LED
 #define IR_LED_PIN 13
 #define DEFAULT_TEMP 24
@@ -187,7 +187,6 @@ void initSHT31() {
     Wire.begin(SDA_PIN, SCL_PIN);
     if(!sht31.begin(DEFAULT_I2C_ADDRESS)) {
         Serial.println("Couldn't find SHT31");
-        // maybe we can handle different logic.
         return;
     }
     Serial.println("SHT31 up.");
