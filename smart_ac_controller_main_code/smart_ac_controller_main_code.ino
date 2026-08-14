@@ -12,17 +12,17 @@
 #include <AsyncTCP.h>
 #include "secrets.h"
 #include <Wire.h>
-#include "Adafruit_SHT31.h"
+#include "SHT30Driver.h"
 
 
 // ============================
 // Constants
 // ============================
 
-// SHT31
+// SHT30
 #define SDA_PIN 22
 #define SCL_PIN 23
-const uint8_t DEFAULT_I2C_ADDRESS{0x44};
+constexpr uint8_t DEFAULT_I2C_ADDRESS{0x44};
 // IR LED
 #define IR_LED_PIN 13
 #define DEFAULT_TEMP 24
@@ -68,7 +68,7 @@ ActiveAutomation automation = {Off, 0, 0, 0};
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
-Adafruit_SHT31 sht31 = Adafruit_SHT31();
+SHT30 sht30{};
 
 float roomTemperature;
 float humidity;
@@ -94,7 +94,7 @@ void startMDNS();
 void initLittleFS();
 void initIR();
 void initWebServer();
-void initSHT31();
+void initSHT30();
 void toggleACPower();
 void turnOnAC();
 void turnOffAC();
@@ -116,7 +116,7 @@ void setup() {
     startMDNS();
     initIR();
     initWebServer();
-    initSHT31();
+    initSHT30();
 
     Serial.println("Setup complete. Server running!");
 }
@@ -125,8 +125,9 @@ void setup() {
 // Main Loop
 // ============================
 void loop() {
-    roomTemperature = sht31.readTemperature();
-    humidity = sht31.readHumidity();
+    SHT30Reading readingResult{sht30.readTemperatureAndHumidity()};
+    roomTemperature = readingResult.temperature;
+    humidity = readingResult.humidity;
     if(!isnan(roomTemperature)&&!isnan(humidity)) {
         Serial.printf("Room Temperature: %.0f, Humidity: %.0f%%\n", roomTemperature, humidity);
         sendTempAndHumidityToClients();
@@ -183,13 +184,13 @@ void initIR() {
     Serial.println("IR Sender initialized");
 }
 
-void initSHT31() {
+void initSHT30() {
     Wire.begin(SDA_PIN, SCL_PIN);
-    if(!sht31.begin(DEFAULT_I2C_ADDRESS)) {
-        Serial.println("Couldn't find SHT31");
+    if(!sht30.begin(DEFAULT_I2C_ADDRESS)) {
+        Serial.println("Couldn't find SHT30");
         return;
     }
-    Serial.println("SHT31 up.");
+    Serial.println("SHT30 up.");
 }
 
 void sendStateToClients() {
