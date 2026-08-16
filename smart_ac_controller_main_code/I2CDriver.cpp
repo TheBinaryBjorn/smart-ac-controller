@@ -1,5 +1,5 @@
 #include "I2CDriver.h"
-#include "driver/i2c.h"
+
 
 bool I2CDriver::begin(const uint8_t sda_pin, const uint8_t scl_pin) {
     m_sda_pin = sda_pin;
@@ -30,8 +30,26 @@ bool I2CDriver::begin(const uint8_t sda_pin, const uint8_t scl_pin) {
     return true;
 }
 
-bool I2CDriver::beginTransmission(const uint8_t i2c_address) {
+bool I2CDriver::beginTransmission(uint8_t i2c_address) {
+    // Create the Command Queue
+    m_command_queue = i2c_cmd_link_create();
 
+    // Verify Memory Allocation
+    if (m_command_queue == nullptr) {
+        return false;
+    }
+
+    // Queue the START Condition
+    i2c_master_start(m_command_queue);
+
+    // Prepare the Address Byte
+    i2c_address <<= 1;
+    i2c_address |= I2C_MASTER_WRITE;
+
+    // Queue the Address Byte
+    i2c_master_write_byte(m_command_queue, i2c_address, ACK_CHECK_EN);
+
+    // Return Success
     return true;
 }
 
