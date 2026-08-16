@@ -30,26 +30,48 @@ bool I2CDriver::begin(const uint8_t sda_pin, const uint8_t scl_pin) {
     return true;
 }
 
+/*
+    Creates an ESP-IDF I2C command link queue in memory.
+    Queues the I2C START condition and the target device address,
+    instructing the hardware to wait for an ACK from the slave
+    when the transmission is eventually executed.
+*/
 bool I2CDriver::beginTransmission(uint8_t i2c_address) {
     // Create the Command Queue
-    m_command_queue = i2c_cmd_link_create();
+    m_command_link_queue = i2c_cmd_link_create();
 
     // Verify Memory Allocation
-    if (m_command_queue == nullptr) {
+    if (m_command_link_queue == nullptr) {
         return false;
     }
 
     // Queue the START Condition
-    i2c_master_start(m_command_queue);
+    i2c_master_start(m_command_link_queue);
 
     // Prepare the Address Byte
     i2c_address <<= 1;
     i2c_address |= I2C_MASTER_WRITE;
 
     // Queue the Address Byte
-    i2c_master_write_byte(m_command_queue, i2c_address, ACK_CHECK_EN);
+    i2c_master_write_byte(m_command_link_queue, i2c_address, ACK_CHECK_EN);
 
     // Return Success
+    return true;
+}
+
+/*
+    Enqueues a given byte into the command link queue
+*/
+bool I2CDriver::write(const uint8_t data) {
+    // Safety Check
+    if (m_command_link_queue == nullptr) {
+        return false;
+    }
+
+    // Queue the Data Byte
+    i2c_master_write_byte(m_command_link_queue, data, ACK_CHECK_EN);
+
+    // Return Status
     return true;
 }
 
