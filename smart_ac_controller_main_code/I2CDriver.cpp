@@ -1,6 +1,10 @@
 #include "I2CDriver.h"
 
-
+/*
+    Creates a configuration container for the FreeRTOS,
+    configuring the SDA and SCL pins, Mode(Master) and Clock speed,
+    installs the driver
+*/
 bool I2CDriver::begin(const uint8_t sda_pin, const uint8_t scl_pin) {
     m_sda_pin = sda_pin;
     m_scl_pin = scl_pin;
@@ -60,6 +64,32 @@ bool I2CDriver::beginTransmission(uint8_t i2c_address) {
 }
 
 /*
+    Adds a stop signal and passes the entire command link
+    queue to the i2c hardware engine. checks for ack and 
+    deletes the queue.
+*/
+bool I2CDriver::endTransmission() {
+    // Safety Check
+    if (m_command_link_queue == nullptr) {
+        return false;
+    }
+
+    // Queue the STOP Condition
+    i2c_master_stop(m_command_link_queue);
+
+    // Execute the Queue
+    esp_err_t queueExecutionResult = i2c_master_cmd_begin(I2C_NUM_0,
+        m_command_link_queue, pdMS_TO_TICKS(1000));
+
+    // Free the Memory
+    i2c_cmd_link_delete(m_command_link_queue);
+    m_command_link_queue = nullptr;
+
+    // Return status
+    return queueExecutionResult == ESP_OK;
+}
+
+/*
     Enqueues a given byte into the command link queue
 */
 bool I2CDriver::write(const uint8_t data) {
@@ -74,4 +104,5 @@ bool I2CDriver::write(const uint8_t data) {
     // Return Status
     return true;
 }
+
 
