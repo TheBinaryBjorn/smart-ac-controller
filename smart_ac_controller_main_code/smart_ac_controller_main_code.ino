@@ -11,17 +11,20 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "secrets.h"
-#include <Wire.h>
 #include "SHT30Driver.h"
+#include "I2CDriver.h"
 
 
 // ============================
 // Constants
 // ============================
 
+// I2C Driver
+I2CDriver i2c_driver;
+
 // SHT30
-#define SDA_PIN 22
-#define SCL_PIN 23
+constexpr uint8_t SDA_PIN{22};
+constexpr uint8_t SCL_PIN{23};
 constexpr uint8_t DEFAULT_I2C_ADDRESS{0x44};
 // IR LED
 #define IR_LED_PIN 13
@@ -68,7 +71,7 @@ ActiveAutomation automation = {Off, 0, 0, 0};
 // Globals
 // ============================
 IRLgAc ac(IR_LED_PIN);
-SHT30 sht30{};
+SHT30 sht30(i2c_driver);
 
 float roomTemperature;
 float humidity;
@@ -185,7 +188,10 @@ void initIR() {
 }
 
 void initSHT30() {
-    Wire.begin(SDA_PIN, SCL_PIN);
+    if(!i2c_driver.begin(SDA_PIN, SCL_PIN)) {
+        Serial.println("I2C Driver Initialization Failed.");
+        return;
+    }
     if(!sht30.begin(DEFAULT_I2C_ADDRESS)) {
         Serial.println("Couldn't find SHT30");
         return;

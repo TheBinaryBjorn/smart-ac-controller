@@ -20,6 +20,6 @@ public:
     bool beginTransmission(const uint8_t i2c_address);
     bool endTransmission();
     bool write(const uint8_t data);
-    uint8_t read();
+    int read();
     uint8_t requestFrom(uint8_t i2c_address, uint8_t quantity);
 };

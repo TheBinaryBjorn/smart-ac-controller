@@ -105,15 +105,6 @@ bool I2CDriver::write(const uint8_t data) {
     return true;
 }
 
-/*
-    Insert a READ command into the command link queue.
-*/
-uint8_t I2CDriver::read() {
-    // TODO: Implement read function
-    return 0;
-}
-
-
 uint8_t I2CDriver::requestFrom(uint8_t i2c_address, uint8_t quantity) {
     // Reset Input Buffer
     m_read_bytes_received = 0;
@@ -170,4 +161,23 @@ uint8_t I2CDriver::requestFrom(uint8_t i2c_address, uint8_t quantity) {
         return quantity;
     }
     return 0;
+}
+
+/*
+    Insert a READ command into the command link queue.
+*/
+int I2CDriver::read() {
+    // Check if any bytes left to read
+    if (m_read_buffer_index >= m_read_bytes_received) {
+        return -1;
+    }
+
+    // Grab byte at current index
+    uint8_t byte{m_read_buffer[m_read_buffer_index]};
+
+    // Increase buffer index
+    ++m_read_buffer_index;
+
+    // Return read byte
+    return byte;
 }
