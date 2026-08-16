@@ -105,4 +105,69 @@ bool I2CDriver::write(const uint8_t data) {
     return true;
 }
 
+/*
+    Insert a READ command into the command link queue.
+*/
+uint8_t I2CDriver::read() {
+    // TODO: Implement read function
+    return 0;
+}
 
+
+uint8_t I2CDriver::requestFrom(uint8_t i2c_address, uint8_t quantity) {
+    // Reset Input Buffer
+    m_read_bytes_received = 0;
+    m_read_buffer_index = 0;
+
+    // Cap quantity at buffer size
+    if (quantity > READ_BUFFER_SIZE) {
+        quantity = READ_BUFFER_SIZE;
+    }
+
+    // Handling reading 0 bytes early.
+    if (quantity == 0) {
+        return 0;
+    }
+
+    // Create local command link queue
+    i2c_cmd_handle_t local_cmd_link_queue{i2c_cmd_link_create()};
+    if (local_cmd_link_queue == nullptr) {
+        return 0;
+    }
+
+    // Queue a START cmd
+    i2c_master_start(local_cmd_link_queue);
+
+    // Prepare i2c address
+    i2c_address <<= 1;
+    i2c_address |= I2C_MASTER_READ;
+
+    // Queue the address with ACK on
+    i2c_master_write_byte(local_cmd_link_queue, i2c_address, ACK_CHECK_EN);
+
+    // Queue READ Commands according to quantity
+    if (quantity > 1) {
+        i2c_master_read(local_cmd_link_queue, m_read_buffer,
+            quantity-1, I2C_MASTER_ACK);
+    }
+    i2c_master_read(local_cmd_link_queue, &m_read_buffer[quantity-1],
+        1, I2C_MASTER_NACK);
+    
+    // Queue STOP command
+    i2c_master_stop(local_cmd_link_queue);
+
+    // Execute the command link queue:
+    esp_err_t queueExecutionResult = i2c_master_cmd_begin(I2C_NUM_0,
+        local_cmd_link_queue, pdMS_TO_TICKS(1000));
+    
+    // Free the memory:
+    i2c_cmd_link_delete(local_cmd_link_queue);
+    local_cmd_link_queue = nullptr; // local variable won't cause a dangling pointer.
+
+    // Verify command queue execution result
+    if (queueExecutionResult == ESP_OK) {
+        m_read_bytes_received = quantity;
+        return quantity;
+    }
+    return 0;
+}
