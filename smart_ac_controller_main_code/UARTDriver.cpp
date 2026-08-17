@@ -103,3 +103,29 @@ size_t UARTDriver::println(const char* text) {
     size_t newline_written_bytes{write(NEWLINE_CHAR)};
     return text_written_bytes + newline_written_bytes;
 }
+
+/*
+
+*/
+size_t UARTDriver::printf(const char* format, ...) {
+    // Check if driver is initialized or pointer is null
+    if (!m_initialized || format == nullptr) {
+        return 0;
+    }
+    // Create a temporary buffer
+    char temporary_buffer[PRINTF_BUFFER_SIZE];
+
+    // utilize va_list, va_start, vsnprintf and va_end
+    va_list arguments;
+    va_start(arguments, format);
+    // Create a string with the correct formatting inside the buffer
+    int length = vsnprintf(temporary_buffer, sizeof(temporary_buffer), format, arguments);
+    va_end(arguments);
+
+    // verify
+    if (length < 0) {
+        return 0;
+    }
+    size_t written_bytes{print(temporary_buffer)};
+    return written_bytes;
+}

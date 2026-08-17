@@ -20,17 +20,18 @@ private:
     static constexpr int TX_PIN{1};
     static constexpr int RX_PIN{3}; 
     static constexpr char NEWLINE_CHAR{'\n'};
+    static constexpr int PRINTF_BUFFER_SIZE{128};
 public:
     bool begin(const uint32_t baud_rate);
     size_t write(const uint8_t byte);
     size_t write(const uint8_t* data, size_t length);
     size_t print(const char* text);
     size_t println(const char* text);
-    int printf(const char* format, ...);
+    size_t printf(const char* format, ...);
 
     // Optional, currently not needed in the project
     //void read();
     //void available();
-    void end();
-    void flush();
+    //void end();
+    //void flush();
 };
