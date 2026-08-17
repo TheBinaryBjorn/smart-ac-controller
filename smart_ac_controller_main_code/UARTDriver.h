@@ -20,7 +20,7 @@ private:
     static constexpr int RX_PIN{3}; 
 public:
     bool begin(const uint32_t baud_rate);
-    size_t write(uint8_t byte);
+    size_t write(const uint8_t byte);
     size_t write(const uint8_t* data, size_t length);
     size_t print(const char* text);
     size_t println(const char* text);

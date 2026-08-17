@@ -28,7 +28,7 @@ bool UARTDriver::begin(const uint32_t baud_rate) {
 
     // apply config
     esp_err_t parameter_application_result = uart_param_config(UART_PORT,
-        & uart_config_struct);
+        &uart_config_struct);
     if (parameter_application_result != ESP_OK) {
         uart_driver_delete(UART_PORT);
         return false;
@@ -47,7 +47,21 @@ bool UARTDriver::begin(const uint32_t baud_rate) {
     return true;
 }
 
-size_t UARTDriver::write(uint8_t byte) {
-    // To be Implemented.
-    return 0;
+size_t UARTDriver::write(const uint8_t* data, size_t length) {
+    // Check if Driver is initialized, If the pointer is null or length is null return 0
+    if (!m_initialized || data == nullptr || length == 0) {
+        return 0;
+    }
+    // Utilize ESP-IDF uart_write_bytes
+    int write_result = uart_write_bytes(UART_PORT, data, length);
+    // Check result
+    if (write_result < 0) {
+        return 0;
+    }
+    // Return result
+    return static_cast<size_t>(write_result);
+}
+
+size_t UARTDriver::write(const uint8_t byte) {
+    return write(&byte, 1);
 }
