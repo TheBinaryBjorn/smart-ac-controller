@@ -47,6 +47,9 @@ bool UARTDriver::begin(const uint32_t baud_rate) {
     return true;
 }
 
+/*
+    Writes a given byte array to the UART TX Pin.
+*/
 size_t UARTDriver::write(const uint8_t* data, size_t length) {
     // Check if Driver is initialized, If the pointer is null or length is null return 0
     if (!m_initialized || data == nullptr || length == 0) {
@@ -62,6 +65,41 @@ size_t UARTDriver::write(const uint8_t* data, size_t length) {
     return static_cast<size_t>(write_result);
 }
 
+/*
+    Writes a single byte to the UART TX Pin.
+*/
 size_t UARTDriver::write(const uint8_t byte) {
+    if (!m_initialized) {
+        return 0;
+    }
     return write(&byte, 1);
+}
+
+/*
+    Prints a given c style string to the console 
+*/
+size_t UARTDriver::print(const char* text) {
+    // Check if driver is initialized or pointer is null
+    if (!m_initialized || text == nullptr) {
+        return 0;
+    }
+    // Measure the length
+    size_t text_length{std::strlen(text)};
+    // Write to UART TX pin with write function
+    return write(reinterpret_cast<const uint8_t*>(text), text_length);
+}
+
+/*
+    Prints a given c style string to the console ending
+    with a new line.
+*/
+size_t UARTDriver::println(const char* text) {
+    // Check if driver is initialized or pointer is null
+    if (!m_initialized || text == nullptr) {
+        return 0;
+    }
+    // Utilize print and write
+    size_t text_written_bytes{print(text)};
+    size_t newline_written_bytes{write(NEWLINE_CHAR)};
+    return text_written_bytes + newline_written_bytes;
 }

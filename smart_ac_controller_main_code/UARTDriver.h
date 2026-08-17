@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdarg>
 #include <cstddef>
+#include <cstring>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "driver/uart.h"
@@ -18,6 +19,7 @@ private:
     static constexpr int INTERRUPT_ALLOCATION_FLAGS{0};
     static constexpr int TX_PIN{1};
     static constexpr int RX_PIN{3}; 
+    static constexpr char NEWLINE_CHAR{'\n'};
 public:
     bool begin(const uint32_t baud_rate);
     size_t write(const uint8_t byte);
