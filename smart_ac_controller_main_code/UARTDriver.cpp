@@ -1,3 +1,6 @@
+#include <cstring>
+#include <cstdio>
+#include <cstdarg>
 #include "UARTDriver.h"
 
 /*
@@ -6,9 +9,6 @@
     and returns result.
 */
 bool UARTDriver::begin(const uint32_t baud_rate) {
-    // Store the baud rate
-    m_baud_rate = baud_rate;
-
     // Create a configuration struct
     uart_config_t uart_config_struct{};
     uart_config_struct.baud_rate = baud_rate;
@@ -105,7 +105,7 @@ size_t UARTDriver::println(const char* text) {
 }
 
 /*
-
+    Prints formatted strings to the serial console.
 */
 size_t UARTDriver::printf(const char* format, ...) {
     // Check if driver is initialized or pointer is null
@@ -119,7 +119,7 @@ size_t UARTDriver::printf(const char* format, ...) {
     va_list arguments;
     va_start(arguments, format);
     // Create a string with the correct formatting inside the buffer
-    int length = vsnprintf(temporary_buffer, sizeof(temporary_buffer), format, arguments);
+    int length = std::vsnprintf(temporary_buffer, sizeof(temporary_buffer), format, arguments);
     va_end(arguments);
 
     // verify

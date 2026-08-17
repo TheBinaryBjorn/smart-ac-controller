@@ -1,15 +1,12 @@
 #pragma once
 #include <cstdint>
-#include <cstdarg>
 #include <cstddef>
-#include <cstring>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "driver/uart.h"
 
 class UARTDriver {
 private:
-    uint32_t m_baud_rate{};
     bool m_initialized{false};
     static constexpr uart_port_t UART_PORT{UART_NUM_0};
     static constexpr int RX_BUFFER_SIZE{256};
