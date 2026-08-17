@@ -16,7 +16,9 @@ bool UARTDriver::begin(const uint32_t baud_rate) {
     uart_config_struct.parity = UART_PARITY_DISABLE;
     uart_config_struct.stop_bits = UART_STOP_BITS_1;
     uart_config_struct.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-    uart_config_struct.source_clk = UART_SCLK_DEFAULT;
+	// UART_SCLK_APB is for IDF 4.x.
+	// For ESP-IDF 5.0 use UART_SCLK_DEFAULT
+    uart_config_struct.source_clk = UART_SCLK_APB; 
 
     // install driver
     esp_err_t driver_installation_result = uart_driver_install(UART_PORT,
