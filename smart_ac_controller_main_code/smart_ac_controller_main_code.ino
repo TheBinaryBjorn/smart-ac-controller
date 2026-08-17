@@ -13,14 +13,23 @@
 #include "secrets.h"
 #include "SHT30Driver.h"
 #include "I2CDriver.h"
+#include "UARTDriver.h"
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 
 // ============================
 // Constants
 // ============================
 
-// I2C Driver
+// I2C Wrapper
 I2CDriver i2c_driver;
+
+// UART Wrapper (Serial)
+UARTDriver serial;
+constexpr uint32_t SERIAL_BAUD_RATE{115200};
+constexpr gpio_num_t ESP_INTERNAL_LED_PIN{GPIO_NUM_2};
 
 // SHT30
 constexpr uint8_t SDA_PIN{22};
@@ -111,8 +120,17 @@ void setACFan(uint8_t fanMode);
 // Setup
 // ============================
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
+    if(!serial.begin(SERIAL_BAUD_RATE)) {
+        gpio_reset_pin(ESP_INTERNAL_LED_PIN);
+        gpio_set_direction(ESP_INTERNAL_LED_PIN, GPIO_MODE_OUTPUT);
+        for(size_t i = 0; i < 4; ++i) {
+            gpio_set_level(ESP_INTERNAL_LED_PIN, 1);
+            vTaskDelay(pdMS_TO_TICKS(200));
+            gpio_set_level(ESP_INTERNAL_LED_PIN, 0);
+            vTaskDelay(pdMS_TO_TICKS(200));
+        }
+    }
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     initLittleFS();
     connectToWiFi();
@@ -121,7 +139,7 @@ void setup() {
     initWebServer();
     initSHT30();
 
-    Serial.println("Setup complete. Server running!");
+    serial.println("Setup complete. Server running!");
 }
 
 // ============================
@@ -132,14 +150,14 @@ void loop() {
     roomTemperature = readingResult.temperature;
     humidity = readingResult.humidity;
     if(!isnan(roomTemperature)&&!isnan(humidity)) {
-        Serial.printf("Room Temperature: %.0f, Humidity: %.0f%%\n", roomTemperature, humidity);
+        serial.printf("Room Temperature: %.0f, Humidity: %.0f%%\n", roomTemperature, humidity);
         sendTempAndHumidityToClients();
     } else {
-        Serial.println("Failed to get Room Temperature & Humidity readings.");
+        serial.println("Failed to get Room Temperature & Humidity readings.");
     }
     switch(automation.automationMode) {
         case Temperature:
-            Serial.println("Temperature Automation!");
+            serial.println("Temperature Automation!");
             if(roomTemperature >= automation.roomTempToActivateAutomation) {
                 if(currentTemp != automation.acTempToSetOnActivation || currentMode != automation.acModeToSetOnActivation || !currentPower) {
                     setACTemperature(automation.acTempToSetOnActivation);
@@ -158,45 +176,45 @@ void loop() {
 // Functions
 // ============================
 void connectToWiFi() {
-    Serial.print("Connecting to Wi-Fi...");
+    serial.print("Connecting to Wi-Fi...");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        Serial.print(".");
+        serial.print(".");
     }
-    Serial.println("\nConnected! IP: " + WiFi.localIP().toString());
+    serial.printf("\nConnected! IP: %s\n" ,WiFi.localIP().toString().c_str());
 }
 
 void startMDNS() {
     if (MDNS.begin(SERVER_DOMAIN)) {
-        Serial.println("mDNS responder started");
+        serial.println("mDNS responder started");
     }
 }
 
 void initLittleFS() {
     if (LittleFS.begin(true)) {
-        Serial.println("LittleFS mounted successfully");
+        serial.println("LittleFS mounted successfully");
     } else {
-        Serial.println("LittleFS mount failed");
+        serial.println("LittleFS mount failed");
     }
 }
 
 
 void initIR() {
     ac.begin();
-    Serial.println("IR Sender initialized");
+    serial.println("IR Sender initialized");
 }
 
 void initSHT30() {
     if(!i2c_driver.begin(SDA_PIN, SCL_PIN)) {
-        Serial.println("I2C Driver Initialization Failed.");
+        serial.println("I2C Driver Initialization Failed.");
         return;
     }
     if(!sht30.begin(DEFAULT_I2C_ADDRESS)) {
-        Serial.println("Couldn't find SHT30");
+        serial.println("Couldn't find SHT30");
         return;
     }
-    Serial.println("SHT30 up.");
+    serial.println("SHT30 up.");
 }
 
 void sendStateToClients() {
@@ -351,7 +369,7 @@ void initWebServer() {
     ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, 
                   AwsEventType type, void *arg, uint8_t *data, size_t len) {
         if(type == WS_EVT_CONNECT) {
-            Serial.printf("WebSocket client #%u connected\n", client->id());
+            serial.printf("WebSocket client #%u connected\n", client->id());
             sendStateToClients();
         }
     });
@@ -359,7 +377,7 @@ void initWebServer() {
     server.addHandler(&ws);
 
     server.begin();
-    Serial.println("Async web server started!");
+    serial.println("Async web server started!");
 }
 
 void toggleACPower() {
@@ -371,11 +389,11 @@ void toggleACPower() {
     ac.setFan(currentFan);
 
     ac.send();
-    Serial.println("AC power command sent");
+    serial.println("AC power command sent");
 }
 
 void setACTemperature(uint8_t temp) {
-    Serial.printf("Setting AC temperature to %d°C...\n", temp);
+    serial.printf("Setting AC temperature to %d°C...\n", temp);
     currentTemp = temp;
     currentPower = POWER_ON;
     ac.on();
@@ -385,11 +403,11 @@ void setACTemperature(uint8_t temp) {
     ac.setFan(currentFan);
 
     ac.send();
-    Serial.println("AC temperature command sent");
+    serial.println("AC temperature command sent");
 }
 
 void setACFan(uint8_t fanMode) {
-    Serial.printf("Setting AC fan to %d...\n", fanMode);
+    serial.printf("Setting AC fan to %d...\n", fanMode);
     currentFan = fanMode;
     currentPower = POWER_ON;
 
@@ -399,11 +417,11 @@ void setACFan(uint8_t fanMode) {
     ac.setFan(fanMode);
 
     ac.send();
-    Serial.println("AC fan command sent");
+    serial.println("AC fan command sent");
 }
 
 void setACMode(uint8_t mode) {
-    Serial.printf("Setting AC mode to %d...", mode);
+    serial.printf("Setting AC mode to %d...", mode);
     currentMode = mode;
     currentPower = POWER_ON;
     ac.on();
@@ -411,5 +429,5 @@ void setACMode(uint8_t mode) {
     ac.setMode(mode);
     ac.setFan(currentFan);
     ac.send();
-    Serial.println("AC mode command sent");
+    serial.println("AC mode command sent");
 }
