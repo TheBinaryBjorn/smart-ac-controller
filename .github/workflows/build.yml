@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        core-version:
+          - 2.0.17
+          - 3.0.7
+
+    steps:
+      # Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Create a stub secrets.h for compilation
+      - name: Create Stub secrets.h
+        run: |
+          cat > smart_ac_controller_main_code/secrets.h <<'EOF'
+          #pragma once
+          constexpr const char* WIFI_SSID{"ci-dummy-ssid"};
+          constexpr const char* WIFI_PASSWORD{"ci-dummy-password"};
+          EOF
+
+      # Cache Arduino's Software for multiple jobs.
+      - name: Cache Arduino Platform
+        uses: actions/cache@v4
+        with:
+          path: ~/.arduino15
+          key: arduino-${{ matrix.core-version }}
+        
+      # Compilation Step.
+      - name: Compile Sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          # FQBN - Fully Qualified Board Name (vendor:architecture:board)
+          fqbn: esp32:esp32:esp32
+          platforms: |
+            - source-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+              name: esp32:esp32
+              version: ${{ matrix.core-version }}
+          libraries: |
+            - name: IRremoteESP8266
+            - source-url: https://github.com/me-no-dev/ESPAsyncWebServer.git
+            - source-url: https://github.com/me-no-dev/AsyncTCP.git
+          sketch-paths: |
+            - smart_ac_controller_main_code
+          enable-warnings-report: true
+          enable-deltas-report: true
