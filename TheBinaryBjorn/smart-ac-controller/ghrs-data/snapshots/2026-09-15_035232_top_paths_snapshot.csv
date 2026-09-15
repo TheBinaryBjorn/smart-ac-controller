@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/TheBinaryBjorn/smart-ac-controller/tree/main/smart_ac_controller_main_code,11,2
+/TheBinaryBjorn/smart-ac-controller,5,2
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/smart_ac_controller_main_code.ino,5,2
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/UARTDriver.cpp,3,2
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/I2CDriver.cpp,2,2
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/SHT30Driver.h,2,1
+/TheBinaryBjorn/smart-ac-controller/issues,2,1
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/I2CDriver.h,1,1
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/SHT30Driver.cpp,1,1
+/TheBinaryBjorn/smart-ac-controller/blob/main/smart_ac_controller_main_code/UARTDriver.h,1,1
